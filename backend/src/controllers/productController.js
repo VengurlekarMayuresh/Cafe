@@ -40,7 +40,12 @@ const getProduct = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const { error, value } = productSchema.validate(req.body);
+    const data = { ...req.body };
+    if (req.file) {
+      data.image_url = req.file.path;
+    }
+
+    const { error, value } = productSchema.validate(data);
     if (error) {
       return res.status(400).json({ success: false, error: 'VALIDATION_ERROR', message: error.details[0].message });
     }
@@ -54,7 +59,12 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   try {
-    const { error, value } = productSchema.validate(req.body);
+    const data = { ...req.body };
+    if (req.file) {
+      data.image_url = req.file.path;
+    }
+
+    const { error, value } = productSchema.validate(data);
     if (error) {
       return res.status(400).json({ success: false, error: 'VALIDATION_ERROR', message: error.details[0].message });
     }
