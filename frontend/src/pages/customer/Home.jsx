@@ -83,7 +83,7 @@ export default function Home() {
   };
 
   const categories = [
-    { name: 'Café Items', desc: 'Coffees, teas, shakes & more', icon: <Coffee className="w-6 h-6" />, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=300' },
+    { name: 'Cafe Items', desc: 'Coffees, teas, shakes & more', icon: <Coffee className="w-6 h-6" />, image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=300' },
     { name: 'Vegetables', desc: 'Fresh & handpicked vegetables', icon: <Carrot className="w-6 h-6" />, image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300' },
     { name: 'Snacks', desc: 'Chips, biscuits, namkeen & more', icon: <Cookie className="w-6 h-6" />, image: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&q=80&w=300' },
   ];
