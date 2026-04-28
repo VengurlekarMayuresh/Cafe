@@ -15,7 +15,7 @@ export default function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await api.get('/orders');
+      const res = await api.get('/orders?me=true');
       // Sort orders newest first
       const sorted = (res.data || res).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setOrders(sorted);
