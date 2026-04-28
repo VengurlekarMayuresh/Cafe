@@ -5,7 +5,7 @@ const { Op } = require('sequelize');
 const getOrders = async (req, res) => {
   try {
     const where = {};
-    if (req.user.role === 'customer') {
+    if (req.user.role === 'customer' || req.query.me === 'true') {
       where.user_id = req.user.id;
     }
 

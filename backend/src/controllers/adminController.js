@@ -1,4 +1,4 @@
-const { User, Order, Product, Review, Notification } = require('../models');
+const { User, Order, OrderItem, Product, Review, Notification } = require('../models');
 const { productSchema } = require('../utils/validator');
 const { Op } = require('sequelize');
 
