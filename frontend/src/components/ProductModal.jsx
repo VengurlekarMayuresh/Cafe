@@ -72,9 +72,11 @@ export default function ProductModal({ selectedProduct, setSelectedProduct, addT
                 </div>
               </div>
 
-              <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                {selectedProduct.description || 'A delicious and freshly prepared item made with premium ingredients. Perfect for any time of the day.'}
-              </p>
+              {selectedProduct.description && (
+                <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                  {selectedProduct.description}
+                </p>
+              )}
 
               {/* Quantity Selector */}
               {selectedProduct.available !== false && selectedProduct.is_available !== false && (
