@@ -197,7 +197,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
               <motion.div 
                 whileHover={{ y: -5 }}
@@ -205,11 +205,11 @@ export default function Home() {
                 className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E5DCCF] hover:shadow-xl transition-all duration-300 flex flex-col group"
               >
                 {/* Image Area */}
-                <div className="relative aspect-square bg-[#F5F1ED] overflow-hidden p-4 flex items-center justify-center">
+                <div className="relative h-48 bg-[#F5F1ED] overflow-hidden flex items-center justify-center shrink-0">
                   <img 
                     src={product.image || product.image_url || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=400`} 
                     alt={product.name} 
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-md rounded-xl mix-blend-multiply" 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
                   
                   {/* Discount Badge */}

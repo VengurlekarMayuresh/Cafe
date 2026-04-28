@@ -124,7 +124,7 @@ export default function Menu() {
         ) : (
           <motion.div 
             layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           >
             <AnimatePresence>
               {filteredProducts.map((product) => (
@@ -138,12 +138,12 @@ export default function Menu() {
                   className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#EBE3D5] hover:shadow-xl transition-all duration-300 flex flex-col group"
                 >
                   {/* Image Area */}
-                  <div className="relative aspect-square bg-[#F5F1ED] overflow-hidden p-4 flex items-center justify-center">
+                  <div className="relative h-48 bg-[#F5F1ED] overflow-hidden flex items-center justify-center shrink-0">
                     {product.image_url ? (
                       <img 
                         src={product.image_url} 
                         alt={product.name} 
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-md rounded-xl mix-blend-multiply" 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-[#EBE3D5] rounded-xl text-[#A67B5B]">

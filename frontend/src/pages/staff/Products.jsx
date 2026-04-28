@@ -313,9 +313,9 @@ export default function StaffProducts() {
               <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#EBE3D5] flex flex-col group relative">
                 
                 {/* Image */}
-                <div className="aspect-[4/3] bg-[#F5F1ED] relative flex items-center justify-center p-2">
+                <div className="h-48 bg-[#F5F1ED] relative flex items-center justify-center shrink-0">
                   {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain mix-blend-multiply" />
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
                     <Coffee className="w-12 h-12 text-gray-300" />
                   )}
