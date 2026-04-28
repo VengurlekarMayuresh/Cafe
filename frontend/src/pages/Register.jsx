@@ -4,6 +4,25 @@ import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { User, Phone, Lock, Home, Hash, Loader2, Coffee } from 'lucide-react';
 
+const InputField = ({ icon: Icon, label, type, value, onChange, placeholder, required = false }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-300 mb-1.5 ml-1">{label}</label>
+    <div className="relative group">
+      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <Icon className="h-5 w-5 text-gray-400 group-focus-within:text-purple-400 transition-colors" />
+      </div>
+      <input 
+        type={type} 
+        value={value} 
+        onChange={onChange}
+        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
+        placeholder={placeholder} 
+        required={required} 
+      />
+    </div>
+  </div>
+);
+
 export default function Register() {
   const [form, setForm] = useState({ name: '', phone: '', password: '', building: '', flat: '' });
   const [error, setError] = useState('');
@@ -24,25 +43,6 @@ export default function Register() {
       setLoading(false);
     }
   };
-
-  const InputField = ({ icon: Icon, label, type, value, onChange, placeholder, required = false }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-300 mb-1.5 ml-1">{label}</label>
-      <div className="relative group">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Icon className="h-5 w-5 text-gray-400 group-focus-within:text-purple-400 transition-colors" />
-        </div>
-        <input 
-          type={type} 
-          value={value} 
-          onChange={onChange}
-          className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" 
-          placeholder={placeholder} 
-          required={required} 
-        />
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-[#0a0a0a] text-white py-12">
