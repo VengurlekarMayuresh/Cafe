@@ -213,9 +213,9 @@ export default function Home() {
                   />
                   
                   {/* Discount Badge */}
-                  {product.originalPrice && product.originalPrice > product.price && (
+                  {(product.original_price || product.originalPrice) && parseFloat(product.original_price || product.originalPrice) > parseFloat(product.price) && (
                     <div className="absolute top-3 left-3 bg-[#6F4E37]/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">
-                      {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                      {Math.round(((parseFloat(product.original_price || product.originalPrice) - parseFloat(product.price)) / parseFloat(product.original_price || product.originalPrice)) * 100)}% OFF
                     </div>
                   )}
                 </div>
@@ -225,9 +225,9 @@ export default function Home() {
                   <h3 className="font-bold text-gray-800 text-[15px] mb-1 line-clamp-1">{product.name}</h3>
                   
                   <div className="flex items-baseline gap-2 mb-3">
-                    <span className="font-bold text-[17px] text-[#333333]">₹{product.price}</span>
-                    {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-xs text-gray-400 line-through">₹{product.originalPrice}</span>
+                    <span className="font-bold text-[17px] text-[#333333]">₹{parseFloat(product.price).toFixed(2)}</span>
+                    {(product.original_price || product.originalPrice) && parseFloat(product.original_price || product.originalPrice) > parseFloat(product.price) && (
+                      <span className="text-xs text-gray-400 line-through">₹{parseFloat(product.original_price || product.originalPrice).toFixed(2)}</span>
                     )}
                   </div>
                   

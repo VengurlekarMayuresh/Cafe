@@ -158,9 +158,9 @@ export default function Menu() {
                     </div>
 
                     {/* Discount Badge (Mocked for UI feel) */}
-                    {product.original_price && product.original_price > product.price && (
+                    {product.original_price && parseFloat(product.original_price) > parseFloat(product.price) && (
                       <div className="absolute top-3 left-3 bg-[#8B5E3C] text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">
-                        {Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF
+                        {Math.round(((parseFloat(product.original_price) - parseFloat(product.price)) / parseFloat(product.original_price)) * 100)}% OFF
                       </div>
                     )}
                   </div>
@@ -178,7 +178,7 @@ export default function Menu() {
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Price</span>
                         <div className="flex items-baseline gap-2">
                           <span className="font-bold text-xl text-[#8B5E3C]">₹{parseFloat(product.price).toFixed(2)}</span>
-                          {product.original_price && product.original_price > product.price && (
+                          {product.original_price && parseFloat(product.original_price) > parseFloat(product.price) && (
                             <span className="text-xs text-gray-400 line-through">₹{parseFloat(product.original_price).toFixed(2)}</span>
                           )}
                         </div>
