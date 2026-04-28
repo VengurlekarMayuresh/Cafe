@@ -1,17 +1,38 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingCart, Search, User, Truck, Coffee, LogOut, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import {
+  ShoppingCart,
+  Search,
+  User,
+  Truck,
+  Coffee,
+  LogOut,
+  ChevronDown,
+  Menu,
+  X
+} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showDropdown, setShowDropdown] = useState(false);
 
-  // For the badge, ideally you'd get this from a CartContext. 
-  // We'll mock it or get it from localStorage for now.
-  const cartItemCount = JSON.parse(localStorage.getItem('cart') || '[]').length || 3; 
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+
+  useEffect(() => {
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const total = cart.length; // Matching the badge '3' logic in the image
+      setCartItemCount(total);
+    };
+    updateCartCount();
+    window.addEventListener('storage', updateCartCount);
+    return () => window.removeEventListener('storage', updateCartCount);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -23,136 +44,171 @@ export default function Navbar() {
     { name: 'Menu', path: '/menu' },
     { name: 'Orders', path: '/orders' },
     { name: 'Offers', path: '/offers' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'Contact', path: '/contact' }
   ];
 
   return (
-    <div className="sticky top-0 z-50 flex flex-col">
-      {/* Top Banner */}
-      <div className="bg-[#6F4E37] text-white text-xs py-1.5 flex justify-center items-center gap-2 font-medium">
-        <Truck className="w-4 h-4" />
+    <header className="sticky top-0 z-50 w-full bg-white">
+      {/* 1. Top Announcement Bar */}
+      <div className="bg-[#412918] text-white text-[11px] md:text-xs py-2 flex justify-center items-center gap-2 font-medium tracking-wide">
+        <Truck className="w-3.5 h-3.5" />
         <span>Free delivery within the society on orders above ₹199</span>
       </div>
 
-      {/* Main Navbar */}
-      <nav className="bg-[#F5F1ED] shadow-sm px-6 py-4 border-b border-[#E5DCCF]">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+      {/* 2. Main Navigation Bar */}
+      <nav className="border-b border-[#EBE3D5] px-4 md:px-8 lg:px-12 py-3.5">
+        <div className="max-w-[1400px] mx-auto flex justify-between items-center">
           
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="text-[#6F4E37]">
-              <Coffee className="w-8 h-8 fill-current" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-serif font-bold text-[#6F4E37] leading-none tracking-tight">
-                Society Café
-              </span>
-              <span className="text-[0.65rem] text-[#A67B5B] uppercase tracking-wider font-semibold">
-                Good Food, Close to Home
-              </span>
-            </div>
-          </Link>
+          {/* LEFT: Logo Section */}
+          <div className="flex items-center gap-4 lg:gap-12">
+            <Link to="/" className="flex items-center gap-3 shrink-0">
+              <div className="bg-[#412918] p-1.5 rounded-lg shadow-sm">
+                <Coffee className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl md:text-2xl font-serif font-bold text-[#412918] leading-none">
+                  Society Café
+                </span>
+                <span className="text-[9px] md:text-[10px] text-gray-500 font-medium tracking-tight mt-0.5">
+                  Good Food, Close to Home
+                </span>
+              </div>
+            </Link>
 
-          {/* Center Links (Customer only) */}
-          {(!user || user.role === 'customer') && (
-            <div className="hidden md:flex items-center gap-8 font-medium">
+            {/* Links - Desktop Only */}
+            <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path || (link.path === '/' && location.pathname === '');
                 return (
-                  <Link 
-                    key={link.name} 
+                  <Link
+                    key={link.name}
                     to={link.path}
-                    className={`relative text-sm transition-colors ${
-                      isActive ? 'text-[#6F4E37] font-semibold' : 'text-gray-600 hover:text-[#A67B5B]'
+                    className={`text-[14px] font-bold transition-all relative py-1 ${
+                      isActive ? 'text-[#8B5E3C]' : 'text-gray-600 hover:text-[#8B5E3C]'
                     }`}
                   >
                     {link.name}
                     {isActive && (
-                      <span className="absolute -bottom-1.5 left-0 w-full h-[2px] bg-[#6F4E37] rounded-full"></span>
+                      <span className="absolute -bottom-1 left-0 w-full h-[2.5px] bg-[#8B5E3C] rounded-full" />
                     )}
                   </Link>
                 );
               })}
             </div>
-          )}
+          </div>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-6">
-            {(!user || user.role === 'customer') ? (
-              <>
-                {/* Search Bar */}
-                <div className="hidden lg:flex relative items-center">
-                  <input 
-                    type="text" 
-                    placeholder="Search for items..." 
-                    className="bg-white border border-[#E5DCCF] rounded-full py-2 pl-4 pr-10 text-sm w-64 focus:outline-none focus:ring-1 focus:ring-[#A67B5B] focus:border-[#A67B5B] transition-all shadow-sm"
-                  />
-                  <Search className="w-4 h-4 text-gray-400 absolute right-4 pointer-events-none" />
-                </div>
+          {/* RIGHT: Search, Cart, Profile */}
+          <div className="flex items-center gap-3 md:gap-7">
+            
+            {/* Search Bar - Exact pill shape from image */}
+            <div className="hidden lg:flex relative items-center group">
+              <input
+                type="text"
+                placeholder="Search for items..."
+                className="bg-[#F5F1ED] border-none rounded-full py-2.5 pl-5 pr-12 text-sm w-60 xl:w-72 focus:ring-2 focus:ring-[#D4A373]/30 transition-all outline-none"
+              />
+              <Search className="w-4 h-4 text-gray-400 absolute right-4 group-hover:text-[#8B5E3C] transition-colors" />
+            </div>
 
-                {/* Cart Icon */}
-                <Link to="/cart" className="relative text-[#6F4E37] hover:text-[#A67B5B] transition-colors">
-                  <ShoppingCart className="w-6 h-6" />
-                  {cartItemCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-[#6F4E37] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-[#F5F1ED]">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </Link>
+            {/* Cart Icon with badge */}
+            <Link to="/cart" className="relative group p-1">
+              <ShoppingCart className="w-6 h-6 text-[#412918] group-hover:text-[#8B5E3C] transition-colors" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#8B5E3C] text-white text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                  {cartItemCount}
+                </span>
+              )}
+            </Link>
 
-                {/* User Profile */}
-                {user ? (
-                  <div className="relative">
-                    <button 
-                      onClick={() => setShowDropdown(!showDropdown)}
-                      className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-[#6F4E37] transition-colors"
+            {/* Profile Section */}
+            <div className="h-8 w-[1px] bg-[#EBE3D5] mx-1 hidden sm:block" />
+
+            {user ? (
+              <div className="relative">
+                <button 
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-2 group"
+                >
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#F5F1ED] border border-[#EBE3D5] flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="User" />
+                  </div>
+                  <div className="hidden sm:flex flex-col items-start text-left">
+                    <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Hello, Rahul</p>
+                    <div className="flex items-center gap-0.5">
+                      <span className="text-[13px] font-bold text-[#412918]">Account</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                    </div>
+                  </div>
+                </button>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {showDropdown && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-[#EBE3D5] py-3 z-[60]"
                     >
-                      <div className="w-8 h-8 rounded-full bg-[#E5DCCF] flex items-center justify-center text-[#6F4E37]">
-                        <User className="w-5 h-5" />
-                      </div>
-                      <span className="hidden sm:inline-block">Hello, {user.name?.split(' ')[0] || 'User'}</span>
-                      <ChevronDown className="w-4 h-4 text-gray-500" />
-                    </button>
-
-                    {showDropdown && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-[#E5DCCF] py-2 z-50">
-                        <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#F5F1ED]">My Profile</Link>
-                        <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-[#F5F1ED]">My Orders</Link>
-                        <button 
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          Logout
+                      <Link to="/profile" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#F5F1ED] font-medium">My Profile</Link>
+                      <Link to="/orders" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-[#F5F1ED] font-medium">My Orders</Link>
+                      <div className="border-t border-[#F5F1ED] mt-2 pt-2">
+                        <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-bold">
+                          <LogOut className="w-4 h-4" /> Logout
                         </button>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <Link to="/login" className="bg-[#6F4E37] text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-[#5a3f2c] transition-colors shadow-sm">
-                    Login
-                  </Link>
-                )}
-              </>
-            ) : (
-              // Staff / Admin Right Section
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-600 bg-[#E5DCCF] px-3 py-1 rounded-full">
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)} Mode
-                </span>
-                <button 
-                  onClick={handleLogout}
-                  className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+            ) : (
+              <Link to="/login" className="bg-[#412918] text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-[#5a3f2c] transition-all shadow-md active:scale-95">
+                Login
+              </Link>
             )}
+
+            {/* Mobile Menu Trigger */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-1 text-[#412918]"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
           </div>
-          
         </div>
       </nav>
-    </div>
+
+      {/* MOBILE SIDE MENU */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 z-[70] backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              className="fixed top-0 right-0 h-full w-[280px] bg-white z-[80] shadow-2xl p-6"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <span className="font-serif font-bold text-[#412918] text-xl">Menu</span>
+                <X className="w-6 h-6 text-gray-400" onClick={() => setMobileMenuOpen(false)} />
+              </div>
+              <div className="flex flex-col gap-5">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    to={link.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-lg font-bold text-gray-700 hover:text-[#8B5E3C] transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </header>
   );
 }
