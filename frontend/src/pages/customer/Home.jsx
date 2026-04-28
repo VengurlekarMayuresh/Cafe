@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronLeft, ChevronRight, Tag, ArrowRight, ShoppingCart, Info, BellRing, Coffee, Carrot, Cookie } from 'lucide-react';
+import ProductModal from '../../components/ProductModal';
 import api from '../../utils/api';
 
 export default function Home() {
@@ -9,6 +10,7 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const scrollToPopular = () => {
     document.getElementById('popular-items')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -69,13 +71,13 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  const addToCart = (product) => {
+  const addToCart = (product, qty = 1) => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
-      existing.qty += 1;
+      existing.qty += qty;
     } else {
-      cart.push({ ...product, qty: 1 });
+      cart.push({ ...product, qty: qty });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
     // Trigger storage event to update navbar badge
@@ -202,7 +204,8 @@ export default function Home() {
               <motion.div 
                 whileHover={{ y: -5 }}
                 key={product.id} 
-                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E5DCCF] hover:shadow-xl transition-all duration-300 flex flex-col group"
+                onClick={() => setSelectedProduct(product)}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E5DCCF] hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer"
               >
                 {/* Image Area */}
                 <div className="relative h-48 bg-[#F5F1ED] overflow-hidden flex items-center justify-center shrink-0">
@@ -244,13 +247,14 @@ export default function Home() {
                   <div className="mt-auto">
                     {product.available !== false ? (
                       <button 
-                        onClick={() => addToCart(product)}
+                        onClick={(e) => { e.stopPropagation(); addToCart(product); }}
                         className="w-full bg-[#6F4E37] hover:bg-[#5a3f2c] text-white font-medium py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
                       >
                         <ShoppingCart className="w-4 h-4" /> ADD TO CART
                       </button>
                     ) : (
                       <button 
+                        onClick={(e) => e.stopPropagation()}
                         className="w-full bg-white border border-[#E5DCCF] text-gray-600 font-medium py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
                       >
                         <BellRing className="w-4 h-4" /> NOTIFY ME
@@ -264,6 +268,14 @@ export default function Home() {
         </section>
         
       </main>
+
+      {/* Product Detail Modal */}
+      <ProductModal 
+        selectedProduct={selectedProduct} 
+        setSelectedProduct={setSelectedProduct} 
+        addToCart={addToCart} 
+      />
+
     </div>
   );
 }

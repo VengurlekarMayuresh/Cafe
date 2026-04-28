@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ShoppingCart, Loader2, Coffee, Filter } from 'lucide-react';
+import ProductModal from '../../components/ProductModal';
 import api from '../../utils/api';
 
 export default function Menu() {
@@ -10,6 +11,7 @@ export default function Menu() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(location.state?.category || 'All');
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -25,13 +27,13 @@ export default function Menu() {
     fetchProducts();
   }, []);
 
-  const addToCart = (product) => {
+  const addToCart = (product, qty = 1) => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
-      existing.qty += 1;
+      existing.qty += qty;
     } else {
-      cart.push({ ...product, qty: 1 });
+      cart.push({ ...product, qty: qty });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
     // Trigger storage event to update navbar badge
@@ -135,7 +137,8 @@ export default function Menu() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
                   key={product.id} 
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#EBE3D5] hover:shadow-xl transition-all duration-300 flex flex-col group"
+                  onClick={() => setSelectedProduct(product)}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#EBE3D5] hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer"
                 >
                   {/* Image Area */}
                   <div className="relative h-48 bg-[#F5F1ED] overflow-hidden flex items-center justify-center shrink-0">
@@ -195,7 +198,7 @@ export default function Menu() {
                     
                     {/* Action Button */}
                     <button 
-                      onClick={() => product.is_available !== false ? addToCart(product) : null}
+                      onClick={(e) => { e.stopPropagation(); product.is_available !== false ? addToCart(product) : null; }}
                       disabled={product.is_available === false}
                       className={`w-full font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-sm ${
                         product.is_available !== false 
@@ -213,6 +216,14 @@ export default function Menu() {
           </motion.div>
         )}
       </div>
+
+      {/* Product Detail Modal */}
+      <ProductModal 
+        selectedProduct={selectedProduct} 
+        setSelectedProduct={setSelectedProduct} 
+        addToCart={addToCart} 
+      />
+
     </div>
   );
 }
