@@ -26,6 +26,10 @@ const productSchema = Joi.object({
   name: Joi.string().min(2).max(255).required(),
   price: Joi.number().positive().required(),
   is_available: Joi.boolean(),
+  category: Joi.string().max(100).allow('', null),
+  description: Joi.string().allow('', null),
+  original_price: Joi.number().positive().allow(null),
+  image_url: Joi.string().uri().allow('', null),
 });
 
 const reviewSchema = Joi.object({
