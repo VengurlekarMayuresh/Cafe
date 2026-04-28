@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Clock, CheckCircle2, XCircle, ChevronRight, X, Coffee, User } from 'lucide-react';
 import api from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function StaffDashboard() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
@@ -11,13 +13,22 @@ export default function StaffDashboard() {
 
   useEffect(() => {
     fetchOrders();
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const res = await api.get('/orders', { params: { status: activeTab === 'all' ? undefined : activeTab } });
-      const sorted = (res.data || res).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      let fetchedOrders = res.data || res;
+
+      // Staff can only see pending orders or orders they have accepted/handled. Admin sees all.
+      if (user?.role === 'staff') {
+        fetchedOrders = fetchedOrders.filter(
+          (o) => o.status === 'pending' || o.handled_by === user.id
+        );
+      }
+
+      const sorted = fetchedOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setOrders(sorted);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
@@ -32,9 +43,13 @@ export default function StaffDashboard() {
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(null); // Close modal on action
       }
-      fetchOrders();
     } catch (err) {
-      alert(err.message || `Failed to ${action} order`);
+      alert(err.message || `Failed to ${action} order. It may have already been updated by someone else.`);
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder(null); // Close modal if there's an error
+      }
+    } finally {
+      fetchOrders();
     }
   };
 
