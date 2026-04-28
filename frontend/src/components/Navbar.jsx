@@ -22,6 +22,7 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [hasPendingOrders, setHasPendingOrders] = useState(false);
 
   useEffect(() => {
     const updateCartCount = () => {
@@ -34,27 +35,41 @@ export default function Navbar() {
     return () => window.removeEventListener('storage', updateCartCount);
   }, []);
 
+  useEffect(() => {
+    if (user?.role === 'staff' || user?.role === 'admin') {
+      const checkPending = async () => {
+        try {
+          const res = await api.get('/orders', { params: { status: 'pending' } });
+          const pendingOrders = res.data || res;
+          setHasPendingOrders(pendingOrders.length > 0);
+        } catch (e) {
+          console.error('Failed to check pending orders');
+        }
+      };
+      checkPending();
+      const interval = setInterval(checkPending, 15000); // Check every 15s
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const navLinks = [
+  let navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Menu', path: '/menu' },
-    { name: 'Orders', path: '/orders' },
-    { name: 'Offers', path: '/offers' },
-    { name: 'Contact', path: '/contact' }
+    { name: 'Orders', path: '/orders' }
   ];
+
+  if (user?.role === 'staff' || user?.role === 'admin') {
+    navLinks.push({ name: 'Dashboard', path: '/staff', hasBadge: hasPendingOrders });
+    navLinks.push({ name: 'Products', path: '/staff/products' });
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white">
-      {/* 1. Top Announcement Bar */}
-      <div className="bg-[#412918] text-white text-[11px] md:text-xs py-2 flex justify-center items-center gap-2 font-medium tracking-wide">
-        <Truck className="w-3.5 h-3.5" />
-        <span>Free delivery within the society on orders above ₹199</span>
-      </div>
-
       {/* 2. Main Navigation Bar */}
       <nav className="border-b border-[#EBE3D5] px-4 md:px-8 lg:px-12 py-3.5">
         <div className="max-w-[1400px] mx-auto flex justify-between items-center">
@@ -88,6 +103,9 @@ export default function Navbar() {
                     }`}
                   >
                     {link.name}
+                    {link.hasBadge && (
+                      <span className="absolute -top-1 -right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+                    )}
                     {isActive && (
                       <span className="absolute -bottom-1 left-0 w-full h-[2.5px] bg-[#8B5E3C] rounded-full" />
                     )}
@@ -133,7 +151,7 @@ export default function Navbar() {
                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="User" />
                   </div>
                   <div className="hidden sm:flex flex-col items-start text-left">
-                    <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Hello, Rahul</p>
+                    <p className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">Hello, {user.name.split(' ')[0]}</p>
                     <div className="flex items-center gap-0.5">
                       <span className="text-[13px] font-bold text-[#412918]">Account</span>
                       <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
@@ -199,9 +217,12 @@ export default function Navbar() {
                     key={link.name}
                     to={link.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-lg font-bold text-gray-700 hover:text-[#8B5E3C] transition-colors"
+                    className="text-lg font-bold text-gray-700 hover:text-[#8B5E3C] transition-colors relative inline-block w-fit"
                   >
                     {link.name}
+                    {link.hasBadge && (
+                      <span className="absolute top-1 -right-3 w-2.5 h-2.5 bg-red-500 rounded-full" />
+                    )}
                   </Link>
                 ))}
               </div>
