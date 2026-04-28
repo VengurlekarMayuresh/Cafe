@@ -59,13 +59,19 @@ export default function Navbar() {
 
   let navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Menu', path: '/menu' },
-    { name: 'Orders', path: '/orders' }
+    { name: 'Menu', path: '/menu' }
   ];
 
-  if (user?.role === 'staff' || user?.role === 'admin') {
+  if (user?.role === 'admin') {
+    navLinks.push({ name: 'Orders', path: '/admin/orders', hasBadge: hasPendingOrders });
+    navLinks.push({ name: 'Dashboard', path: '/admin' });
+    navLinks.push({ name: 'Products', path: '/staff/products' });
+  } else if (user?.role === 'staff') {
+    navLinks.push({ name: 'Orders', path: '/orders' });
     navLinks.push({ name: 'Dashboard', path: '/staff', hasBadge: hasPendingOrders });
     navLinks.push({ name: 'Products', path: '/staff/products' });
+  } else {
+    navLinks.push({ name: 'Orders', path: '/orders' });
   }
 
   return (
@@ -104,7 +110,10 @@ export default function Navbar() {
                   >
                     {link.name}
                     {link.hasBadge && (
-                      <span className="absolute -top-1 -right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-white" />
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
                     )}
                     {isActive && (
                       <span className="absolute -bottom-1 left-0 w-full h-[2.5px] bg-[#8B5E3C] rounded-full" />
@@ -221,7 +230,10 @@ export default function Navbar() {
                   >
                     {link.name}
                     {link.hasBadge && (
-                      <span className="absolute top-1 -right-3 w-2.5 h-2.5 bg-red-500 rounded-full" />
+                      <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
                     )}
                   </Link>
                 ))}
