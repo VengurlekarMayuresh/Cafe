@@ -1,11 +1,46 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, ChevronLeft, ChevronRight, Tag, ArrowRight, ShoppingCart, Info, BellRing, Coffee, Carrot, Cookie } from 'lucide-react';
 import api from '../../utils/api';
 
 export default function Home() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const scrollToPopular = () => {
+    document.getElementById('popular-items')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const carouselSlides = [
+    {
+      image: '/hero_pastries.png',
+      title: 'Fresh Café',
+      highlight: 'Delivered to Your Door',
+      desc: 'Hot coffees, delicious snacks & daily essentials — all within your society!'
+    },
+    {
+      image: '/hero_groceries.png',
+      title: 'Healthy Organics',
+      highlight: 'Fresh from the Farm',
+      desc: 'Premium quality vegetables and groceries to keep you healthy.'
+    },
+    {
+      image: '/hero_sandwich.png',
+      title: 'Gourmet Bites',
+      highlight: 'Perfect for Cravings',
+      desc: 'Savor our delicious sandwiches and refreshing beverages anytime.'
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Mock product data for UI visualization if DB is empty
   const mockProducts = [
@@ -62,8 +97,8 @@ export default function Home() {
         <section className="relative w-full h-[400px] rounded-3xl overflow-hidden shadow-xl group">
           {/* Background Image */}
           <div 
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-            style={{ backgroundImage: `url('/cafe_hero_banner_1777396877066.png'), url('https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&q=80&w=1600')` }}
+            className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out hover:scale-105"
+            style={{ backgroundImage: `url('${carouselSlides[currentSlide].image}')` }}
           />
           {/* Gradient Overlay for Text Readability */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#3a2211]/90 via-[#4e2e17]/70 to-transparent" />
@@ -71,20 +106,23 @@ export default function Home() {
           {/* Hero Content */}
           <div className="absolute inset-0 flex flex-col justify-center p-12 md:p-20 text-white w-full md:w-2/3">
             <motion.h1 
+              key={`title-${currentSlide}`}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
               className="text-5xl md:text-6xl font-serif font-bold mb-4 leading-tight drop-shadow-md"
             >
-              Fresh Café <br/>
-              <span className="text-[#D4A373]">Delivered to Your Door</span>
+              {carouselSlides[currentSlide].title} <br/>
+              <span className="text-[#D4A373]">{carouselSlides[currentSlide].highlight}</span>
             </motion.h1>
             <motion.p 
+              key={`desc-${currentSlide}`}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-[#F5F1ED] mb-8 font-medium max-w-lg leading-relaxed drop-shadow-sm"
             >
-              Hot coffees, delicious snacks & daily essentials <br className="hidden md:block" />
-              — all within your society!
+              {carouselSlides[currentSlide].desc}
             </motion.p>
             <motion.button 
+              key={`btn-${currentSlide}`}
+              onClick={scrollToPopular}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
               className="bg-[#A67B5B] hover:bg-[#D4A373] text-white px-8 py-3.5 rounded-full font-bold w-max flex items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
@@ -92,20 +130,29 @@ export default function Home() {
             </motion.button>
           </div>
 
-          {/* Carousel Controls (Mock) */}
-          <button className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
+          {/* Carousel Controls */}
+          <button 
+            onClick={() => setCurrentSlide((prev) => (prev === 0 ? carouselSlides.length - 1 : prev - 1))}
+            className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+          >
             <ChevronLeft className="w-6 h-6" />
           </button>
-          <button className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
+          <button 
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % carouselSlides.length)}
+            className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+          >
             <ChevronRight className="w-6 h-6" />
           </button>
 
           {/* Carousel Dots */}
-          <div className="absolute bottom-6 left-1/2 -translate-y-1/2 -translate-x-1/2 flex gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#D4A373] shadow-sm"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white/80 cursor-pointer shadow-sm"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white/80 cursor-pointer shadow-sm"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-white/50 hover:bg-white/80 cursor-pointer shadow-sm"></div>
+          <div className="absolute bottom-6 left-1/2 -translate-y-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {carouselSlides.map((_, idx) => (
+              <div 
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`w-2.5 h-2.5 rounded-full cursor-pointer shadow-sm transition-all ${currentSlide === idx ? 'bg-[#D4A373] w-6' : 'bg-white/50 hover:bg-white/80'}`}
+              ></div>
+            ))}
           </div>
         </section>
 
@@ -127,7 +174,10 @@ export default function Home() {
                   <h3 className="text-xl font-serif font-bold text-[#6F4E37] mb-1">{cat.name}</h3>
                   <p className="text-sm text-gray-500 mb-6 max-w-[140px]">{cat.desc}</p>
                 </div>
-                <button className="text-xs font-bold text-[#6F4E37] border border-[#E5DCCF] rounded-full px-4 py-1.5 w-max flex items-center gap-1 group-hover:border-[#A67B5B] group-hover:bg-[#F5F1ED] transition-colors">
+                <button 
+                  onClick={() => navigate('/menu', { state: { category: cat.name } })}
+                  className="text-xs font-bold text-[#6F4E37] border border-[#E5DCCF] rounded-full px-4 py-1.5 w-max flex items-center gap-1 group-hover:border-[#A67B5B] group-hover:bg-[#F5F1ED] transition-colors"
+                >
                   EXPLORE <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
@@ -138,33 +188,8 @@ export default function Home() {
           ))}
         </section>
 
-        {/* Discount Banner */}
-        <section className="bg-gradient-to-r from-[#F3E2C8] to-[#EAD5BA] rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between shadow-sm border border-[#E5DCCF]">
-          <div className="flex items-center gap-6 mb-4 md:mb-0">
-            <div className="w-16 h-16 bg-[#6F4E37] rounded-full flex items-center justify-center text-[#F5F1ED] transform -rotate-12 shadow-lg">
-              <Tag className="w-8 h-8" />
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#6F4E37] flex items-baseline gap-2">
-                10% OFF <span className="text-lg font-sans font-medium text-[#8c6b54]">on all Café Items</span>
-              </h2>
-              <p className="text-sm font-medium text-gray-700 mt-1">
-                Use Code: <span className="font-bold text-[#6F4E37]">CAFE10</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <span className="hidden lg:inline-block border border-[#6F4E37] border-dashed rounded px-4 py-2 text-sm font-bold text-[#6F4E37] uppercase tracking-wide">
-              Limited Time Offer
-            </span>
-            <button className="bg-[#6F4E37] hover:bg-[#5a3f2c] text-white px-8 py-3 rounded-lg font-bold transition-colors w-full md:w-auto shadow-md">
-              ORDER NOW
-            </button>
-          </div>
-        </section>
-
         {/* Popular Items (Product Grid) */}
-        <section>
+        <section id="popular-items" className="scroll-mt-24">
           <div className="flex justify-between items-end mb-6">
             <h2 className="text-2xl font-serif font-bold text-[#6F4E37]">Popular Items</h2>
             <button className="text-sm font-medium text-[#A67B5B] hover:text-[#6F4E37] flex items-center gap-1 transition-colors">
