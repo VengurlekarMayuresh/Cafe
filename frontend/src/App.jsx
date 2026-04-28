@@ -29,11 +29,11 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Customer Routes */}
-          <Route path="/" element={<ProtectedRoute allowedRoles={['customer']}><CustomerHome /></ProtectedRoute>} />
-          <Route path="/menu" element={<ProtectedRoute allowedRoles={['customer']}><CustomerMenu /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute allowedRoles={['customer']}><CustomerOrders /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute allowedRoles={['customer']}><Cart /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer']}><Profile /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><CustomerHome /></ProtectedRoute>} />
+          <Route path="/menu" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><CustomerMenu /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><CustomerOrders /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><Cart /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><Profile /></ProtectedRoute>} />
 
           {/* Staff Routes */}
           <Route path="/staff" element={<ProtectedRoute allowedRoles={['staff', 'admin']}><StaffDashboard /></ProtectedRoute>} />
