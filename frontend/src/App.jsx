@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Unauthorized from './pages/Unauthorized';
 import CustomerHome from './pages/customer/Home';
+import CustomerMenu from './pages/customer/Menu';
 import CustomerOrders from './pages/customer/Orders';
 import Cart from './pages/customer/Cart';
 import Profile from './pages/customer/Profile';
@@ -29,6 +30,7 @@ function App() {
 
           {/* Customer Routes */}
           <Route path="/" element={<ProtectedRoute allowedRoles={['customer']}><CustomerHome /></ProtectedRoute>} />
+          <Route path="/menu" element={<ProtectedRoute allowedRoles={['customer']}><CustomerMenu /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute allowedRoles={['customer']}><CustomerOrders /></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute allowedRoles={['customer']}><Cart /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer']}><Profile /></ProtectedRoute>} />

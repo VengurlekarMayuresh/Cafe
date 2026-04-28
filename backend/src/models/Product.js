@@ -19,6 +19,23 @@ module.exports = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    category: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      defaultValue: 'Cafe Items',
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    original_price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    image_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
   }, {
     tableName: 'products',
     timestamps: true,
