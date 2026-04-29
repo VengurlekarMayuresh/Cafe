@@ -17,7 +17,7 @@ export default function Orders() {
     try {
       const res = await api.get('/orders?me=true');
       // Sort orders newest first
-      const sorted = (res.data || res).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const sorted = (res.data || res).sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
       setOrders(sorted);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
@@ -37,7 +37,9 @@ export default function Orders() {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return { date: 'N/A', time: 'N/A' };
     const d = new Date(dateString);
+    if (isNaN(d.getTime())) return { date: 'N/A', time: 'N/A' };
     return {
       date: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       time: d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
@@ -73,7 +75,7 @@ export default function Orders() {
             {orders.map(order => {
               const statusConfig = getStatusConfig(order.status);
               const StatusIcon = statusConfig.icon;
-              const { date, time } = formatDate(order.created_at);
+              const { date, time } = formatDate(order.createdAt || order.created_at);
 
               return (
                 <motion.div 
@@ -147,11 +149,14 @@ export default function Orders() {
                   
                   {/* Status Banner */}
                   <div className={`p-4 rounded-xl border flex items-center gap-3 ${getStatusConfig(selectedOrder.status).bg} ${getStatusConfig(selectedOrder.status).border} ${getStatusConfig(selectedOrder.status).color}`}>
-                    {getStatusConfig(selectedOrder.status).icon({className: "w-6 h-6"})}
+                    {(() => {
+                      const StatusIcon = getStatusConfig(selectedOrder.status).icon;
+                      return <StatusIcon className="w-6 h-6" />;
+                    })()}
                     <div>
                       <p className="font-bold">{getStatusConfig(selectedOrder.status).label}</p>
                       <p className="text-xs opacity-80">
-                        Placed on {formatDate(selectedOrder.created_at).date} at {formatDate(selectedOrder.created_at).time}
+                        Placed on {formatDate(selectedOrder.createdAt || selectedOrder.created_at).date} at {formatDate(selectedOrder.createdAt || selectedOrder.created_at).time}
                       </p>
                     </div>
                   </div>
