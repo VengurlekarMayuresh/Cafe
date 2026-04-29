@@ -64,9 +64,7 @@ export default function InvoiceModal({
               </div>
             </div>
 
-            <button onClick={onClose} className="absolute top-4 right-4 p-2 text-gray-300 hover:text-red-500 transition-colors">
-              <X className="w-5 h-5" />
-            </button>
+
           </div>
 
           {/* Invoice Body */}

@@ -202,9 +202,7 @@ export default function AdminCustomers() {
                           </div>
                        </div>
                     </div>
-                    <button onClick={() => setSelectedCustomer(null)} className="absolute top-8 right-8 p-3 text-gray-300 hover:text-red-500 transition-colors">
-                      <X className="w-8 h-8" />
-                    </button>
+
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-8 sm:p-12 bg-[#FDFBF7]/30">

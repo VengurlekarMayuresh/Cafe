@@ -28,13 +28,7 @@ export default function ProductModal({ selectedProduct, setSelectedProduct, addT
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="w-full max-w-[450px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh] pointer-events-auto relative z-10"
           >
-            {/* Close Button */}
-            <button 
-              onClick={() => setSelectedProduct(null)} 
-              className="absolute top-4 right-4 z-20 p-2 bg-white/80 backdrop-blur-md rounded-full text-gray-800 hover:bg-white shadow-sm"
-            >
-              <X className="w-5 h-5" />
-            </button>
+
 
             {/* Image Header */}
             <div className="relative h-64 bg-[#F5F1ED] flex items-center justify-center shrink-0 w-full overflow-hidden">
