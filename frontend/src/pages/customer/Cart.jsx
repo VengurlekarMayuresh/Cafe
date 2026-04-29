@@ -4,9 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, Coffee, Loader2 } from 'lucide-react';
 import api from '../../utils/api';
 
+import ConfirmationModal from '../../components/ConfirmationModal';
+
 export default function Cart() {
   const [cart, setCart] = useState([]);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +36,7 @@ export default function Cart() {
   const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
   const total = subtotal;
 
-  const placeOrder = async () => {
+  const handlePlaceOrder = async () => {
     if (cart.length === 0) return;
     setPlacingOrder(true);
     try {
@@ -51,6 +54,17 @@ export default function Cart() {
   return (
     <div className="min-h-screen bg-[#F5F1ED] font-sans pb-24 pt-8 text-[#333333]">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Confirmation Modal */}
+        <ConfirmationModal 
+          isOpen={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          onConfirm={handlePlaceOrder}
+          title="Place Order?"
+          message={`Are you sure you want to place this order for ₹${total.toFixed(2)}?`}
+          confirmText="Yes, Place Order"
+          icon={ShoppingBag}
+        />
         
         <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#412918] mb-8 flex items-center gap-3">
           <ShoppingBag className="w-8 h-8 text-[#8B5E3C]" /> Your Cart
@@ -158,7 +172,7 @@ export default function Cart() {
                 </div>
 
                 <button 
-                  onClick={placeOrder}
+                  onClick={() => setShowConfirm(true)}
                   disabled={placingOrder}
                   className="w-full bg-[#412918] hover:bg-[#5a3f2c] text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 disabled:opacity-70"
                 >

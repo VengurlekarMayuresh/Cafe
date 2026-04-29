@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Clock, CheckCircle2, XCircle, ChevronRight, Coffee, User } from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle2, XCircle, ChevronRight, Coffee, User, Plus } from 'lucide-react';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import InvoiceModal from '../../components/InvoiceModal';
@@ -84,10 +85,29 @@ export default function StaffDashboard() {
     <div className="min-h-screen bg-[#F5F1ED] font-sans pb-24 pt-8 text-[#333333]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         
+        {/* Top Action Bar */}
+        <div className="mb-10 flex items-center justify-between bg-[#412918] p-6 rounded-[2rem] shadow-xl text-white">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-[#8B5E3C] rounded-2xl flex items-center justify-center">
+                 <ShoppingBag className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                 <h1 className="text-2xl font-serif font-black tracking-tight">Staff Command Center</h1>
+                 <p className="text-[10px] text-[#D4A373] font-bold uppercase tracking-[0.2em]">Live Kitchen & POS Terminal</p>
+              </div>
+           </div>
+           <Link 
+              to="/staff/pos" 
+              className="bg-[#D4A373] hover:bg-[#c39162] text-[#412918] px-8 py-3.5 rounded-2xl text-sm font-black transition-all flex items-center gap-3 hover:-translate-y-0.5 shadow-lg active:scale-95"
+           >
+              <Plus className="w-5 h-5" /> New Walk-in Order
+           </Link>
+        </div>
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl font-serif font-bold text-[#412918] flex items-center gap-3">
-            <ShoppingBag className="w-7 h-7 text-[#8B5E3C]" /> Kitchen Dashboard
-          </h1>
+          <h2 className="text-2xl font-serif font-bold text-[#412918]">
+            Order Management
+          </h2>
           
           <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2 sm:pb-0">
             {['pending', 'accepted', 'delivered', 'rejected', 'all'].map(tab => (
