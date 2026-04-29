@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, CheckCircle, Ban, Clock, Filter, Users as UsersIcon } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle, Ban, Clock, Filter, Users as UsersIcon, Trash2, Key } from 'lucide-react';
 import api from '../../utils/api';
 
 export default function AdminUsers() {
@@ -41,6 +41,31 @@ export default function AdminUsers() {
       fetchUsers();
     } catch (err) {
       alert(err.message || 'Failed to block user');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to completely delete this user? This action cannot be undone.')) return;
+    try {
+      await api.delete(`/admin/users/${id}`);
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Failed to delete user');
+    }
+  };
+
+  const handleChangePassword = async (id) => {
+    const newPassword = window.prompt('Enter new password (minimum 6 characters):');
+    if (!newPassword) return;
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters.');
+      return;
+    }
+    try {
+      await api.patch(`/admin/users/${id}/password`, { password: newPassword });
+      alert('Password changed successfully');
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Failed to change password');
     }
   };
 
@@ -125,13 +150,32 @@ export default function AdminUsers() {
                   </button>
                 )}
                 
-                {user.status !== 'blocked' && user.role !== 'admin' && (
-                  <button 
-                    onClick={() => handleBlock(user.id)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-5 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    <Ban className="w-4 h-4" /> Block
-                  </button>
+                {user.role !== 'admin' && (
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    {user.status !== 'blocked' && (
+                      <button 
+                        onClick={() => handleBlock(user.id)}
+                        className="flex-1 sm:flex-none flex items-center justify-center bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 p-2.5 rounded-xl font-bold transition-colors"
+                        title="Block User"
+                      >
+                        <Ban className="w-5 h-5" />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleChangePassword(user.id)}
+                      className="flex-1 sm:flex-none flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 p-2.5 rounded-xl font-bold transition-colors"
+                      title="Change Password"
+                    >
+                      <Key className="w-5 h-5" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(user.id)}
+                      className="flex-1 sm:flex-none flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 p-2.5 rounded-xl font-bold transition-colors"
+                      title="Delete User"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 )}
               </div>
               
