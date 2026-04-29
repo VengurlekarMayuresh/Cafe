@@ -81,7 +81,6 @@ export default function Navbar() {
 
   if (user?.role === 'admin') {
     navLinks.push({ name: 'Dashboard', path: '/admin', hasBadge: hasPendingOrders });
-    navLinks.push({ name: 'Customers', path: '/admin/customers' });
   } else if (user?.role === 'staff') {
     navLinks.push({ name: 'Dashboard', path: '/staff', hasBadge: hasPendingOrders });
   } else {
