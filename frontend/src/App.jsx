@@ -16,7 +16,7 @@ import StaffPOS from './pages/staff/POS';
 import StaffProducts from './pages/staff/Products';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
-import AdminOrders from './pages/admin/Orders';
+import AdminCustomers from './pages/admin/Customers';
 
 function App() {
   return (
@@ -43,7 +43,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsers /></ProtectedRoute>} />
-          <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={['admin']}><AdminOrders /></ProtectedRoute>} />
+          <Route path="/admin/customers" element={<ProtectedRoute allowedRoles={['admin']}><AdminCustomers /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
