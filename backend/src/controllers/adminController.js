@@ -145,4 +145,42 @@ const getAnalytics = async (req, res) => {
   }
 };
 
-module.exports = { getPendingUsers, approveUser, blockUser, getAllUsers, getAdminOrders, getAnalytics };
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'User not found' });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(403).json({ success: false, error: 'FORBIDDEN', message: 'Cannot delete admin account' });
+    }
+
+    await user.destroy();
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'SERVER_ERROR', message: err.message });
+  }
+};
+
+const changeUserPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, error: 'VALIDATION_ERROR', message: 'Password must be at least 6 characters long' });
+    }
+
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'User not found' });
+    }
+
+    await user.update({ password });
+    
+    res.json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'SERVER_ERROR', message: err.message });
+  }
+};
+
+module.exports = { getPendingUsers, approveUser, blockUser, getAllUsers, getAdminOrders, getAnalytics, deleteUser, changeUserPassword };
