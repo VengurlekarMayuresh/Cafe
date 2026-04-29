@@ -11,7 +11,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
@@ -20,6 +20,18 @@ export default function Navbar() {
   const location = useLocation();
 
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [hasPendingOrders, setHasPendingOrders] = useState(false);
@@ -58,18 +70,20 @@ export default function Navbar() {
   };
 
   let navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Menu', path: '/menu' }
+    { name: 'Home', path: '/' }
   ];
+
+  if (user?.role === 'admin' || user?.role === 'staff') {
+    navLinks.push({ name: 'Products', path: '/staff/products' });
+  } else {
+    navLinks.push({ name: 'Menu', path: '/menu' });
+  }
 
   if (user?.role === 'admin') {
     navLinks.push({ name: 'Orders', path: '/admin/orders', hasBadge: hasPendingOrders });
     navLinks.push({ name: 'Dashboard', path: '/admin' });
-    navLinks.push({ name: 'Products', path: '/staff/products' });
   } else if (user?.role === 'staff') {
-    navLinks.push({ name: 'Orders', path: '/orders' });
     navLinks.push({ name: 'Dashboard', path: '/staff', hasBadge: hasPendingOrders });
-    navLinks.push({ name: 'Products', path: '/staff/products' });
   } else {
     navLinks.push({ name: 'Orders', path: '/orders' });
   }
@@ -128,14 +142,14 @@ export default function Navbar() {
           <div className="flex items-center gap-3 md:gap-7">
             
             {/* Search Bar - Exact pill shape from image */}
-            <div className="hidden lg:flex relative items-center group">
+            {/* <div className="hidden lg:flex relative items-center group">
               <input
                 type="text"
                 placeholder="Search for items..."
                 className="bg-[#F5F1ED] border-none rounded-full py-2.5 pl-5 pr-12 text-sm w-60 xl:w-72 focus:ring-2 focus:ring-[#D4A373]/30 transition-all outline-none"
               />
               <Search className="w-4 h-4 text-gray-400 absolute right-4 group-hover:text-[#8B5E3C] transition-colors" />
-            </div>
+            </div> */}
 
             {/* Cart Icon with badge */}
             <Link to="/cart" className="relative group p-1">
@@ -151,7 +165,7 @@ export default function Navbar() {
             <div className="h-8 w-[1px] bg-[#EBE3D5] mx-1 hidden sm:block" />
 
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center gap-2 group"
