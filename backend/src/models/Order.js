@@ -33,6 +33,10 @@ module.exports = (sequelize) => {
       type: DataTypes.ENUM('paid', 'unpaid'),
       defaultValue: 'unpaid',
     },
+    payment_method: {
+      type: DataTypes.ENUM('online', 'offline', 'unknown'),
+      defaultValue: 'unknown',
+    },
   }, {
     tableName: 'orders',
     timestamps: true,

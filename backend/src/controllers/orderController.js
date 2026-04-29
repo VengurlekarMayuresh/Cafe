@@ -163,7 +163,12 @@ const deliverOrder = async (req, res) => {
       return res.status(403).json({ success: false, error: 'NOT_OWNER', message: 'Only the accepting staff can deliver' });
     }
 
-    await order.update({ status: 'delivered' });
+    const { payment_method } = req.body;
+    await order.update({ 
+      status: 'delivered',
+      payment_method: payment_method || 'offline',
+      payment_status: 'paid'
+    });
 
     if (order.user_id) {
       await Notification.create({
