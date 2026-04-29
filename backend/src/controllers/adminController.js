@@ -91,9 +91,10 @@ const getAllUsers = async (req, res) => {
 
 const getAdminOrders = async (req, res) => {
   try {
-    const { status, from_date, to_date, limit = 20, offset = 0 } = req.query;
+    const { status, from_date, to_date, user_id, limit = 20, offset = 0 } = req.query;
     const where = {};
     if (status) where.status = status;
+    if (user_id) where.user_id = user_id;
     if (from_date) where.created_at = { [Op.gte]: new Date(from_date) };
     if (to_date) where.created_at = { ...where.created_at, [Op.lte]: new Date(to_date) };
 
