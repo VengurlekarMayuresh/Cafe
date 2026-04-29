@@ -10,10 +10,7 @@ export default function StaffDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const [selectedOrder, setSelectedOrder] = useState(null);
-
-  useEffect(() => {
-    fetchOrders();
-  }, [activeTab, user]);
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -37,20 +34,31 @@ export default function StaffDashboard() {
     }
   };
 
-  const handleAction = async (orderId, action) => {
+  useEffect(() => {
+    fetchOrders();
+  }, [activeTab, user]);
+
+  const handleAction = async (orderId, action, extraData = {}) => {
     try {
-      await api.patch(`/orders/${orderId}/${action}`);
+      await api.patch(`/orders/${orderId}/${action}`, extraData);
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(null); // Close modal on action
       }
+      setShowPaymentPrompt(false);
     } catch (err) {
       alert(err.message || `Failed to ${action} order. It may have already been updated by someone else.`);
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(null); // Close modal if there's an error
       }
+      setShowPaymentPrompt(false);
     } finally {
       fetchOrders();
     }
+  };
+
+  const handlePrint = () => {
+    // Simple print using window.print
+    window.print();
   };
 
   const getStatusConfig = (status) => {
@@ -219,7 +227,7 @@ export default function StaffDashboard() {
                   </div>
 
                   {/* Invoice Body */}
-                  <div className="flex-1 overflow-y-auto p-8 bg-white">
+                  <div className="flex-1 overflow-y-auto p-8 bg-white" id="invoice-content">
                     <div className="w-full mb-6">
                       <div className="flex text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2 mb-4">
                         <span className="flex-1">Description</span>
@@ -256,7 +264,7 @@ export default function StaffDashboard() {
                           <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Payment Method:</p>
                             <span className={`text-[11px] font-bold px-2 py-1 rounded ${selectedOrder.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                              {selectedOrder.payment_status === 'paid' ? 'Paid via Online/Cash' : 'Payment Pending'}
+                              {selectedOrder.payment_status === 'paid' ? `Paid via ${selectedOrder.payment_method?.toUpperCase() || 'Online/Cash'}` : 'Payment Pending'}
                             </span>
                           </div>
                           <div className="text-right">
@@ -267,7 +275,7 @@ export default function StaffDashboard() {
                     </div>
 
                     {/* Actions based on status */}
-                    <div className="mt-8 pt-6 border-t border-gray-100">
+                    <div className="mt-8 pt-6 border-t border-gray-100 print:hidden">
                       {selectedOrder.status === 'pending' && (
                         <div className="grid grid-cols-2 gap-3">
                           <button 
@@ -287,7 +295,7 @@ export default function StaffDashboard() {
 
                       {selectedOrder.status === 'accepted' && (
                         <button 
-                          onClick={() => handleAction(selectedOrder.id, 'deliver')}
+                          onClick={() => setShowPaymentPrompt(true)}
                           className="w-full py-3 rounded-xl font-bold bg-[#8B5E3C] text-white shadow-md hover:bg-[#6c482e] transition-colors"
                         >
                           Mark as Delivered
@@ -295,8 +303,16 @@ export default function StaffDashboard() {
                       )}
 
                       {(selectedOrder.status === 'delivered' || selectedOrder.status === 'rejected') && (
-                        <div className="text-center py-2 text-sm font-bold text-gray-500 uppercase">
-                          Order is {selectedOrder.status}
+                        <div className="flex flex-col gap-3">
+                          <div className="text-center py-2 text-sm font-bold text-gray-500 uppercase">
+                            Order is {selectedOrder.status}
+                          </div>
+                          <button 
+                            onClick={handlePrint}
+                            className="w-full py-3 rounded-xl font-bold bg-[#412918] text-white shadow-md hover:bg-[#2c1b10] transition-colors flex items-center justify-center gap-2"
+                          >
+                             Print Invoice
+                          </button>
                         </div>
                       )}
                     </div>
@@ -309,6 +325,56 @@ export default function StaffDashboard() {
 
               </motion.div>
               </div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Payment Method Prompt */}
+        <AnimatePresence>
+          {showPaymentPrompt && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setShowPaymentPrompt(false)}
+                className="fixed inset-0 bg-black/40 z-[150] backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[400px] bg-white rounded-3xl shadow-2xl z-[160] overflow-hidden"
+              >
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-[#F5F1ED] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ShoppingBag className="w-8 h-8 text-[#8B5E3C]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#412918] mb-2">Select Payment Method</h3>
+                  <p className="text-sm text-gray-500 mb-6">How did the customer pay for this order?</p>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    <button 
+                      onClick={() => handleAction(selectedOrder.id, 'deliver', { payment_method: 'online' })}
+                      className="py-4 rounded-2xl font-bold bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex flex-col items-center gap-1"
+                    >
+                      <span className="text-lg">Online Payment</span>
+                      <span className="text-[10px] opacity-80 uppercase tracking-widest">UPI / Card / App</span>
+                    </button>
+                    <button 
+                      onClick={() => handleAction(selectedOrder.id, 'deliver', { payment_method: 'offline' })}
+                      className="py-4 rounded-2xl font-bold bg-[#8B5E3C] text-white shadow-lg shadow-amber-200 hover:bg-[#6c482e] transition-all flex flex-col items-center gap-1"
+                    >
+                      <span className="text-lg">Cash / Offline</span>
+                      <span className="text-[10px] opacity-80 uppercase tracking-widest">Collected at counter</span>
+                    </button>
+                    <button 
+                      onClick={() => setShowPaymentPrompt(false)}
+                      className="mt-2 py-2 text-sm font-bold text-gray-400 hover:text-gray-600"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             </>
           )}
         </AnimatePresence>

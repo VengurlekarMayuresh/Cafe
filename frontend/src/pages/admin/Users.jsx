@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, CheckCircle, Ban, Clock, Filter, Users as UsersIcon, Trash2, Key } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle, Ban, Clock, Users as UsersIcon, Trash2, Key } from 'lucide-react';
 import api from '../../utils/api';
 
 export default function AdminUsers() {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending');
-
-  useEffect(() => { fetchUsers(); }, []);
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'customers', 'staff'
 
   const fetchUsers = async () => {
     try {
@@ -24,6 +22,8 @@ export default function AdminUsers() {
       setLoading(false);
     }
   };
+
+  useEffect(() => { fetchUsers(); }, []);
 
   const handleApprove = async (id) => {
     try {
@@ -71,7 +71,13 @@ export default function AdminUsers() {
 
   if (loading) return <div className="min-h-screen bg-[#F5F1ED] flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B5E3C]"></div></div>;
 
-  const users = activeTab === 'pending' ? pendingUsers : allUsers;
+  const filteredUsers = allUsers.filter(u => u.role !== 'admin');
+  const pendingList = pendingUsers.filter(u => u.role !== 'admin');
+  const customersList = filteredUsers.filter(u => u.role === 'customer' && u.status !== 'pending');
+  const staffList = filteredUsers.filter(u => u.role === 'staff' && u.status !== 'pending');
+
+  const displayedUsers = activeTab === 'pending' ? pendingList : 
+                        activeTab === 'customers' ? customersList : staffList;
 
   return (
     <div className="min-h-screen bg-[#F5F1ED] font-sans pb-24 pt-8 text-[#333333]">
@@ -85,28 +91,36 @@ export default function AdminUsers() {
             <p className="text-gray-500 font-medium">Approve new registrations and manage existing users.</p>
           </div>
           
-          <div className="flex bg-white rounded-full p-1 border border-[#EBE3D5] shadow-sm">
+          <div className="flex bg-white rounded-full p-1 border border-[#EBE3D5] shadow-sm overflow-x-auto hide-scrollbar">
             <button 
               onClick={() => setActiveTab('pending')}
-              className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
                 activeTab === 'pending' ? 'bg-[#8B5E3C] text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              Pending ({pendingUsers.length})
+              Approval ({pendingList.length})
             </button>
             <button 
-              onClick={() => setActiveTab('all')}
-              className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
-                activeTab === 'all' ? 'bg-[#412918] text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'
+              onClick={() => setActiveTab('customers')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
+                activeTab === 'customers' ? 'bg-[#412918] text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              All Users ({allUsers.length})
+              Customers ({customersList.length})
+            </button>
+            <button 
+              onClick={() => setActiveTab('staff')}
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
+                activeTab === 'staff' ? 'bg-[#412918] text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Staff ({staffList.length})
             </button>
           </div>
         </div>
 
         <div className="space-y-4">
-          {users.map(user => (
+          {displayedUsers.map(user => (
             <div key={user.id} className="bg-white border border-[#EBE3D5] rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
               
               <div className="flex items-center gap-4">
@@ -182,7 +196,7 @@ export default function AdminUsers() {
             </div>
           ))}
           
-          {users.length === 0 && (
+          {displayedUsers.length === 0 && (
             <div className="bg-white rounded-3xl p-12 text-center border border-[#EBE3D5] shadow-sm">
               <ShieldCheck className="w-16 h-16 text-[#D4A373] mx-auto mb-4 opacity-50" />
               <h2 className="text-xl font-bold text-[#412918]">No {activeTab} users found</h2>
