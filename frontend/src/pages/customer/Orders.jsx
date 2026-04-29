@@ -133,69 +133,102 @@ export default function Orders() {
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
                   className="w-full max-w-[500px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh] pointer-events-auto"
                 >
-                {/* Header */}
-                <div className="p-6 border-b border-[#EBE3D5] bg-[#F5F1ED] flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Receipt</p>
-                    <h2 className="text-xl font-bold text-[#412918]">Order #{selectedOrder.id.slice(0, 6).toUpperCase()}</h2>
-                  </div>
-                  <button onClick={() => setSelectedOrder(null)} className="p-2 bg-white rounded-full text-gray-500 hover:text-[#412918] shadow-sm">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
-                  
-                  {/* Status Banner */}
-                  <div className={`p-4 rounded-xl border flex items-center gap-3 ${getStatusConfig(selectedOrder.status).bg} ${getStatusConfig(selectedOrder.status).border} ${getStatusConfig(selectedOrder.status).color}`}>
-                    {(() => {
-                      const StatusIcon = getStatusConfig(selectedOrder.status).icon;
-                      return <StatusIcon className="w-6 h-6" />;
-                    })()}
-                    <div>
-                      <p className="font-bold">{getStatusConfig(selectedOrder.status).label}</p>
-                      <p className="text-xs opacity-80">
-                        Placed on {formatDate(selectedOrder.createdAt || selectedOrder.created_at).date} at {formatDate(selectedOrder.createdAt || selectedOrder.created_at).time}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Items List */}
-                  <div>
-                    <h3 className="font-bold text-[#412918] mb-4 border-b border-[#EBE3D5] pb-2">Order Items</h3>
-                    <div className="space-y-4">
-                      {selectedOrder.items?.map(item => (
-                        <div key={item.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded bg-[#F5F1ED] text-[#8B5E3C] font-bold flex items-center justify-center text-xs">
-                              {item.quantity}x
-                            </div>
-                            <span className="font-medium text-[#333333]">{item.product?.name || 'Unknown Item'}</span>
-                          </div>
-                          <span className="font-bold text-[#412918]">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                  {/* Header - Invoice Style */}
+                  <div className="p-8 border-b-2 border-dashed border-[#EBE3D5] bg-white relative">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                           <Coffee className="w-6 h-6 text-[#8B5E3C]" />
+                           <h1 className="text-2xl font-serif font-black text-[#412918] tracking-tight">SOCIETY CAFÉ</h1>
                         </div>
-                      ))}
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">Good Food, Close to Home</p>
+                      </div>
+                      <div className="text-right">
+                        <h2 className="text-3xl font-black text-[#EBE3D5] leading-none mb-1">INVOICE</h2>
+                        <p className="text-xs font-bold text-[#8B5E3C]">#{selectedOrder.id.slice(0, 8).toUpperCase()}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8 text-sm">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-wider">Bill To:</p>
+                        <p className="font-bold text-[#412918] text-base">{selectedOrder.customer?.name || 'Walk-in Customer'}</p>
+                        <p className="text-gray-500 font-medium">Bldg {selectedOrder.customer?.building || 'N/A'}, Flat {selectedOrder.customer?.flat || 'N/A'}</p>
+                        <p className="text-gray-500 font-medium">📞 {selectedOrder.customer?.phone || 'N/A'}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="mb-3">
+                          <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-wider">Date & Time:</p>
+                          <p className="font-bold text-[#412918]">{new Date(selectedOrder.createdAt || selectedOrder.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                          <p className="text-xs font-medium text-gray-500">{new Date(selectedOrder.createdAt || selectedOrder.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-wider">Billing Mode:</p>
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${selectedOrder.order_type === 'online' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                            {selectedOrder.order_type} Order
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button onClick={() => setSelectedOrder(null)} className="absolute top-4 right-4 p-2 text-gray-300 hover:text-red-500 transition-colors">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Invoice Body */}
+                  <div className="flex-1 overflow-y-auto p-8 bg-white">
+                    <div className="w-full mb-6">
+                      <div className="flex text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2 mb-4">
+                        <span className="flex-1">Description</span>
+                        <span className="w-16 text-center">Qty</span>
+                        <span className="w-24 text-right">Price</span>
+                        <span className="w-24 text-right">Total</span>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {selectedOrder.items?.map(item => (
+                          <div key={item.id} className="flex items-center text-sm">
+                            <div className="flex-1">
+                              <p className="font-bold text-[#412918]">{item.product?.name || 'Unknown Item'}</p>
+                              <p className="text-[10px] text-gray-400">Unit Price: ₹{parseFloat(item.price).toFixed(2)}</p>
+                            </div>
+                            <span className="w-16 text-center font-bold text-gray-600">x{item.quantity}</span>
+                            <span className="w-24 text-right font-medium text-gray-500">₹{parseFloat(item.price).toFixed(2)}</span>
+                            <span className="w-24 text-right font-bold text-[#412918]">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t-2 border-dashed border-[#EBE3D5] space-y-2">
+                       <div className="flex justify-between items-center text-sm font-medium text-gray-500">
+                          <span>Subtotal</span>
+                          <span>₹{parseFloat(selectedOrder.total_price).toFixed(2)}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-sm font-medium text-gray-500">
+                          <span>Service Charge (Included)</span>
+                          <span>₹0.00</span>
+                       </div>
+                       <div className="flex justify-between items-center pt-4">
+                          <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Payment Method:</p>
+                            <span className={`text-[11px] font-bold px-2 py-1 rounded ${selectedOrder.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                              {selectedOrder.payment_status === 'paid' ? 'Paid via Online/Cash' : 'Payment Pending'}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                             <p className="text-xs font-bold text-gray-400 uppercase mb-1">Grand Total</p>
+                             <p className="text-3xl font-black text-[#8B5E3C]">₹{parseFloat(selectedOrder.total_price).toFixed(2)}</p>
+                          </div>
+                       </div>
                     </div>
                   </div>
 
-                </div>
-
-                {/* Footer Totals */}
-                <div className="p-6 bg-[#F5F1ED] border-t border-[#EBE3D5]">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">₹{parseFloat(selectedOrder.total_price).toFixed(2)}</span>
+                  {/* Footer Decoration */}
+                  <div className="p-6 bg-[#412918] text-white text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60">Thank you for visiting Society Café</p>
                   </div>
-                  <div className="flex justify-between items-center mb-4 pb-4 border-b border-[#EBE3D5]">
-                    <span className="text-gray-600">Delivery</span>
-                    <span className="font-bold text-green-600">FREE</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-lg text-[#412918]">Total Paid</span>
-                    <span className="text-2xl font-bold text-[#8B5E3C]">₹{parseFloat(selectedOrder.total_price).toFixed(2)}</span>
-                  </div>
-                </div>
 
               </motion.div>
               </div>
