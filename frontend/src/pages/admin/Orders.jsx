@@ -9,13 +9,11 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [activeMainTab, setActiveMainTab] = useState('orders'); // 'orders' or 'staff'
 
   const fetchOrders = async () => {
     try {
-      // Fetch all orders for comprehensive analytics
       const res = await api.get('/admin/orders', { params: { limit: 1000 } });
-      console.log('Admin orders response:', res);
-      
       let fetchedData = [];
       if (Array.isArray(res)) {
         fetchedData = res;
@@ -24,7 +22,6 @@ export default function AdminOrders() {
       } else if (res && res.data && Array.isArray(res.data.data)) {
         fetchedData = res.data.data;
       }
-      
       setOrders(fetchedData);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
@@ -35,7 +32,6 @@ export default function AdminOrders() {
 
   useEffect(() => {
     fetchOrders();
-    // Auto-refresh every 15 seconds for live updates
     const interval = setInterval(fetchOrders, 15000);
     return () => clearInterval(interval);
   }, []);
@@ -81,6 +77,31 @@ export default function AdminOrders() {
     return { completed, rejected, pending, accepted, totalItemsSold, totalRevenue, topItems };
   }, [orders]);
 
+  // Compute Staff Performance
+  const staffPerformance = useMemo(() => {
+    const staffStats = {};
+    
+    orders.forEach(order => {
+      if (order.status === 'delivered' && order.handler) {
+        const staffId = order.handler.id;
+        if (!staffStats[staffId]) {
+          staffStats[staffId] = {
+            id: staffId,
+            name: order.handler.name,
+            completedCount: 0,
+            totalRevenue: 0,
+            orders: []
+          };
+        }
+        staffStats[staffId].completedCount++;
+        staffStats[staffId].totalRevenue += parseFloat(order.total_price);
+        staffStats[staffId].orders.push(order);
+      }
+    });
+
+    return Object.values(staffStats).sort((a, b) => b.completedCount - a.completedCount);
+  }, [orders]);
+
   // Filter Orders locally
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -123,6 +144,22 @@ export default function AdminOrders() {
             <ShoppingBag className="w-8 h-8 text-[#8B5E3C]" /> Orders Center
           </h1>
           <p className="text-gray-500 font-medium">Review insights and track all customer orders globally.</p>
+        </div>
+
+        {/* Main Tab Switcher */}
+        <div className="flex gap-4 mb-8">
+          <button 
+            onClick={() => setActiveMainTab('orders')}
+            className={`px-6 py-3 rounded-2xl font-bold transition-all ${activeMainTab === 'orders' ? 'bg-[#412918] text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+          >
+            Order Management
+          </button>
+          <button 
+            onClick={() => setActiveMainTab('staff')}
+            className={`px-6 py-3 rounded-2xl font-bold transition-all ${activeMainTab === 'staff' ? 'bg-[#412918] text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+          >
+            Staff Performance
+          </button>
         </div>
 
         {/* Insights Section */}
@@ -200,115 +237,187 @@ export default function AdminOrders() {
 
         </div>
 
-        {/* Filters and List */}
-        <div className="bg-white rounded-3xl shadow-sm border border-[#EBE3D5] overflow-hidden">
-          
-          <div className="p-6 border-b border-[#EBE3D5] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50">
-            
-            {/* Search */}
-            <div className="relative w-full md:w-80">
-              <input 
-                type="text"
-                placeholder="Search by ID, name or flat..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-[#EBE3D5] rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]/30 focus:border-[#8B5E3C] transition-all"
-              />
-              <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            </div>
+        {activeMainTab === 'orders' ? (
+          <>
+            {/* Filters and List */}
+            <div className="bg-white rounded-3xl shadow-sm border border-[#EBE3D5] overflow-hidden">
+              
+              <div className="p-6 border-b border-[#EBE3D5] flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50">
+                
+                {/* Search */}
+                <div className="relative w-full md:w-80">
+                  <input 
+                    type="text"
+                    placeholder="Search by ID, name or flat..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-[#EBE3D5] rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]/30 focus:border-[#8B5E3C] transition-all"
+                  />
+                  <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                </div>
 
-            {/* Filter Pills */}
-            <div className="flex overflow-x-auto hide-scrollbar gap-2">
-              {[
-                { id: 'all', label: 'All Orders', count: orders.length },
-                { id: 'pending', label: 'Pending', count: insights.pending },
-                { id: 'accepted', label: 'Preparing', count: insights.accepted },
-                { id: 'delivered', label: 'Completed', count: insights.completed },
-                { id: 'rejected', label: 'Rejected', count: insights.rejected }
-              ].map(tab => (
-                <button 
-                  key={tab.id}
-                  onClick={() => setStatusFilter(tab.id)}
-                  className={`px-5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
-                    statusFilter === tab.id 
-                      ? 'bg-[#412918] text-white border-[#412918] shadow-sm' 
-                      : 'bg-white text-gray-600 border-[#EBE3D5] hover:bg-gray-50'
-                  }`}
-                >
-                  {tab.label} <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] ${statusFilter === tab.id ? 'bg-white/20' : 'bg-gray-100'}`}>{tab.count}</span>
-                </button>
-              ))}
-            </div>
+                {/* Filter Pills */}
+                <div className="flex overflow-x-auto hide-scrollbar gap-2">
+                  {[
+                    { id: 'all', label: 'All Orders', count: orders.length },
+                    { id: 'pending', label: 'Pending', count: insights.pending },
+                    { id: 'accepted', label: 'Preparing', count: insights.accepted },
+                    { id: 'delivered', label: 'Completed', count: insights.completed },
+                    { id: 'rejected', label: 'Rejected', count: insights.rejected }
+                  ].map(tab => (
+                    <button 
+                      key={tab.id}
+                      onClick={() => setStatusFilter(tab.id)}
+                      className={`px-5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
+                        statusFilter === tab.id 
+                          ? 'bg-[#412918] text-white border-[#412918] shadow-sm' 
+                          : 'bg-white text-gray-600 border-[#EBE3D5] hover:bg-gray-50'
+                      }`}
+                    >
+                      {tab.label} <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] ${statusFilter === tab.id ? 'bg-white/20' : 'bg-gray-100'}`}>{tab.count}</span>
+                    </button>
+                  ))}
+                </div>
 
-          </div>
-
-          <div className="p-6">
-            {filteredOrders.length === 0 ? (
-              <div className="text-center py-16">
-                <Filter className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-[#412918]">No orders found</h3>
-                <p className="text-gray-500 mt-1">Try adjusting your filters or search query.</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {filteredOrders.map(order => (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    key={order.id} 
-                    onClick={() => setSelectedOrder(order)}
-                    className="bg-[#FDFBF7] border border-[#EBE3D5] rounded-2xl p-5 hover:border-[#8B5E3C]/30 hover:shadow-md transition-all flex flex-col sm:flex-row items-center justify-between gap-6 cursor-pointer group"
-                  >
-                    <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
-                      <div className="flex-shrink-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-[#412918] text-lg">#{order.id.slice(0, 8).toUpperCase()}</span>
-                          <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase font-bold tracking-wider">{order.order_type}</span>
+
+              <div className="p-6">
+                {filteredOrders.length === 0 ? (
+                  <div className="text-center py-16">
+                    <Filter className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-[#412918]">No orders found</h3>
+                    <p className="text-gray-500 mt-1">Try adjusting your filters or search query.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {filteredOrders.map(order => (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        key={order.id} 
+                        onClick={() => setSelectedOrder(order)}
+                        className="bg-[#FDFBF7] border border-[#EBE3D5] rounded-2xl p-5 hover:border-[#8B5E3C]/30 hover:shadow-md transition-all flex flex-col sm:flex-row items-center justify-between gap-6 cursor-pointer group"
+                      >
+                        <div className="flex flex-col sm:flex-row items-center gap-6 w-full">
+                          <div className="flex-shrink-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-[#412918] text-lg">#{order.id.slice(0, 8).toUpperCase()}</span>
+                              <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase font-bold tracking-wider">{order.order_type}</span>
+                            </div>
+                            <p className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                              {new Date(order.createdAt || order.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+
+                          <div className="h-10 w-[1px] bg-gray-200 hidden sm:block mx-2" />
+
+                          <div className="flex-1 text-center sm:text-left">
+                            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Customer Details</p>
+                            <p className="font-bold text-sm text-[#412918]">{order.customer?.name || 'Walk-in'}</p>
+                            {order.customer?.building && <p className="text-xs text-gray-600">Bldg {order.customer.building}, Flat {order.customer.flat}</p>}
+                          </div>
+
+                          <div className="h-10 w-[1px] bg-gray-200 hidden sm:block mx-2" />
+
+                          <div className="flex-1 text-center sm:text-left">
+                            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Status & Handler</p>
+                            <div className="flex flex-col items-center sm:items-start gap-1">
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1.5 capitalize ${getStatusColor(order.status)}`}>
+                                {getStatusIcon(order.status)} {order.status}
+                              </span>
+                              <p className="text-xs font-bold text-[#412918] truncate max-w-[120px]">By: {order.handler?.name || 'Pending'}</p>
+                            </div>
+                          </div>
+
+                          <div className="h-10 w-[1px] bg-gray-200 hidden sm:block mx-2" />
+
+                          <div className="text-center sm:text-right flex-shrink-0 min-w-[100px]">
+                            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Total Amount</p>
+                            <p className="text-xl font-black text-[#8B5E3C]">₹{parseFloat(order.total_price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-500 font-medium whitespace-nowrap">
-                          {new Date(order.createdAt || order.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
 
-                      <div className="h-10 w-[1px] bg-gray-200 hidden sm:block mx-2" />
-
-                      <div className="flex-1 text-center sm:text-left">
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Customer Details</p>
-                        <p className="font-bold text-sm text-[#412918]">{order.customer?.name || 'Walk-in'}</p>
-                        {order.customer?.building && <p className="text-xs text-gray-600">Bldg {order.customer.building}, Flat {order.customer.flat}</p>}
-                      </div>
-
-                      <div className="h-10 w-[1px] bg-gray-200 hidden sm:block mx-2" />
-
-                      <div className="flex-1 text-center sm:text-left">
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Status & Handler</p>
-                        <div className="flex flex-col items-center sm:items-start gap-1">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1.5 capitalize ${getStatusColor(order.status)}`}>
-                            {getStatusIcon(order.status)} {order.status}
-                          </span>
-                          <p className="text-xs font-bold text-[#412918] truncate max-w-[120px]">By: {order.handler?.name || 'Pending'}</p>
+                        <div className="flex sm:flex-col items-center gap-2">
+                           <div className="w-10 h-10 rounded-full bg-white border border-[#EBE3D5] flex items-center justify-center group-hover:bg-[#8B5E3C] group-hover:text-white transition-all shadow-sm">
+                              <ShoppingBag className="w-5 h-5" />
+                           </div>
                         </div>
-                      </div>
-
-                      <div className="h-10 w-[1px] bg-gray-200 hidden sm:block mx-2" />
-
-                      <div className="text-center sm:text-right flex-shrink-0 min-w-[100px]">
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Total Amount</p>
-                        <p className="text-xl font-black text-[#8B5E3C]">₹{parseFloat(order.total_price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex sm:flex-col items-center gap-2">
-                       <div className="w-10 h-10 rounded-full bg-white border border-[#EBE3D5] flex items-center justify-center group-hover:bg-[#8B5E3C] group-hover:text-white transition-all shadow-sm">
-                          <ShoppingBag className="w-5 h-5" />
-                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          </>
+        ) : (
+          /* Staff Performance Section */
+          <div className="grid grid-cols-1 gap-6">
+             <div className="bg-white rounded-3xl shadow-sm border border-[#EBE3D5] overflow-hidden">
+                <div className="p-8 border-b border-[#EBE3D5] bg-gray-50/50">
+                   <h2 className="text-xl font-bold text-[#412918]">Leaderboard & Order Distribution</h2>
+                   <p className="text-sm text-gray-500 mt-1">Track which staff members are most active and their total revenue generation.</p>
+                </div>
+                <div className="p-8">
+                   {staffPerformance.length === 0 ? (
+                      <div className="text-center py-12">
+                         <Coffee className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                         <p className="text-gray-400 font-medium">No staff activity recorded yet.</p>
+                      </div>
+                   ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                         {staffPerformance.map((staff, idx) => (
+                            <motion.div 
+                               initial={{ opacity: 0, scale: 0.95 }}
+                               animate={{ opacity: 1, scale: 1 }}
+                               key={staff.id}
+                               className="bg-[#FDFBF7] border border-[#EBE3D5] rounded-3xl p-6 relative overflow-hidden group hover:border-[#8B5E3C]/30 hover:shadow-xl transition-all"
+                            >
+                               {idx === 0 && (
+                                  <div className="absolute top-0 right-0 bg-[#8B5E3C] text-white text-[10px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm">
+                                     Top Performer
+                                  </div>
+                               )}
+                               
+                               <div className="flex items-center gap-4 mb-6">
+                                  <div className="w-14 h-14 rounded-2xl bg-white border border-[#EBE3D5] flex items-center justify-center overflow-hidden">
+                                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${staff.name}`} alt={staff.name} />
+                                  </div>
+                                  <div>
+                                     <h3 className="font-black text-[#412918] text-lg leading-tight">{staff.name}</h3>
+                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Staff Member</p>
+                                  </div>
+                               </div>
+
+                               <div className="grid grid-cols-2 gap-4">
+                                  <div className="bg-white rounded-2xl p-4 border border-[#EBE3D5]">
+                                     <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Orders</p>
+                                     <p className="text-2xl font-black text-[#8B5E3C]">{staff.completedCount}</p>
+                                  </div>
+                                  <div className="bg-white rounded-2xl p-4 border border-[#EBE3D5]">
+                                     <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Revenue</p>
+                                     <p className="text-xl font-black text-[#412918]">₹{staff.totalRevenue.toLocaleString()}</p>
+                                  </div>
+                               </div>
+
+                               <div className="mt-6">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase mb-3 tracking-widest">Recent Orders Handled</p>
+                                  <div className="space-y-2">
+                                     {staff.orders.slice(0, 3).map(order => (
+                                        <div key={order.id} className="flex items-center justify-between text-xs bg-white/50 p-2 rounded-lg border border-[#EBE3D5]/50">
+                                           <span className="font-bold text-gray-600">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                           <span className="font-black text-[#8B5E3C]">₹{parseFloat(order.total_price).toFixed(2)}</span>
+                                        </div>
+                                     ))}
+                                  </div>
+                               </div>
+                            </motion.div>
+                         ))}
+                      </div>
+                   )}
+                </div>
+             </div>
           </div>
-        </div>
+        )}
 
         {/* Order Details Modal (Sheet) */}
         <AnimatePresence>
@@ -408,13 +517,22 @@ export default function AdminOrders() {
                           <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Payment Method:</p>
                             <span className={`text-[11px] font-bold px-2 py-1 rounded ${selectedOrder.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                              {selectedOrder.payment_status === 'paid' ? 'Paid via Online/Cash' : 'Payment Pending'}
+                              {selectedOrder.payment_status === 'paid' ? `Paid via ${selectedOrder.payment_method?.toUpperCase() || 'Online/Cash'}` : 'Payment Pending'}
                             </span>
                           </div>
                           <div className="text-right">
                              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Grand Total</p>
                              <p className="text-3xl font-black text-[#8B5E3C]">₹{parseFloat(selectedOrder.total_price).toFixed(2)}</p>
                           </div>
+                       </div>
+
+                       <div className="mt-6 pt-4 border-t border-gray-100 print:hidden">
+                          <button 
+                            onClick={() => window.print()}
+                            className="w-full py-3 rounded-xl font-bold bg-[#412918] text-white shadow-md hover:bg-[#2c1b10] transition-colors flex items-center justify-center gap-2"
+                          >
+                             Print Invoice
+                          </button>
                        </div>
                     </div>
                   </div>

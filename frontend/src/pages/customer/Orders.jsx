@@ -214,13 +214,22 @@ export default function Orders() {
                           <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Payment Method:</p>
                             <span className={`text-[11px] font-bold px-2 py-1 rounded ${selectedOrder.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                              {selectedOrder.payment_status === 'paid' ? 'Paid via Online/Cash' : 'Payment Pending'}
+                              {selectedOrder.payment_status === 'paid' ? `Paid via ${selectedOrder.payment_method?.toUpperCase() || 'Online/Cash'}` : 'Payment Pending'}
                             </span>
                           </div>
                           <div className="text-right">
                              <p className="text-xs font-bold text-gray-400 uppercase mb-1">Grand Total</p>
                              <p className="text-3xl font-black text-[#8B5E3C]">₹{parseFloat(selectedOrder.total_price).toFixed(2)}</p>
                           </div>
+                       </div>
+
+                       <div className="mt-6 pt-4 border-t border-gray-100 print:hidden">
+                          <button 
+                            onClick={() => window.print()}
+                            className="w-full py-3 rounded-xl font-bold bg-[#412918] text-white shadow-md hover:bg-[#2c1b10] transition-colors flex items-center justify-center gap-2"
+                          >
+                             Print Invoice
+                          </button>
                        </div>
                     </div>
                   </div>
