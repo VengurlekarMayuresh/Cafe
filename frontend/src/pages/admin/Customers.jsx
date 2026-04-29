@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Search, Phone, MapPin, 
-  ShoppingBag, ChevronRight, X, Filter, CheckCircle
+  ShoppingBag, ChevronRight, X, TrendingUp, Package
 } from 'lucide-react';
 import api from '../../utils/api';
 import InvoiceModal from '../../components/InvoiceModal';
@@ -15,8 +15,6 @@ export default function AdminCustomers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerOrders, setCustomerOrders] = useState([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
@@ -26,9 +24,6 @@ export default function AdminCustomers() {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/admin/analytics');
-      // The analytics endpoint doesn't return full customer list usually, 
-      // let's try to get it from users endpoint filtered by role
       const usersRes = await api.get('/admin/users');
       const allUsers = usersRes.data || usersRes;
       setCustomers(allUsers.filter(u => u.role === 'customer'));
@@ -42,7 +37,7 @@ export default function AdminCustomers() {
   const fetchCustomerHistory = async (customerId) => {
     try {
       setIsHistoryLoading(true);
-      const res = await api.get('/admin/orders', { params: { customerId, limit: 100 } });
+      const res = await api.get('/admin/orders', { params: { customerId, limit: 1000 } });
       setCustomerOrders(res.data || res);
     } catch (err) {
       console.error('Failed to fetch customer history:', err);
@@ -64,35 +59,21 @@ export default function AdminCustomers() {
     );
   }, [customers, searchQuery]);
 
-  const filteredOrders = useMemo(() => {
-    return customerOrders.filter(order => {
-      const matchStatus = statusFilter === 'all' || 
-                          (statusFilter === 'completed' && order.status === 'delivered') ||
-                          (statusFilter === 'pending' && order.status === 'pending') ||
-                          (statusFilter === 'preparing' && order.status === 'accepted') ||
-                          (statusFilter === 'rejected' && order.status === 'rejected');
-      
-      const matchSearch = order.id.includes(orderSearchQuery);
-      return matchStatus && matchSearch;
+  // Aggregate Stats for selected customer
+  const aggregateStats = useMemo(() => {
+    if (!customerOrders.length) return { items: 0, revenue: 0 };
+    let items = 0;
+    let revenue = 0;
+    customerOrders.forEach(order => {
+      if (order.status === 'delivered') {
+        revenue += parseFloat(order.total_price);
+        order.items?.forEach(item => {
+          items += item.quantity;
+        });
+      }
     });
-  }, [customerOrders, statusFilter, orderSearchQuery]);
-
-  const getStatusBadge = (status) => {
-    switch(status) {
-      case 'pending': return { label: 'Pending', color: 'bg-yellow-50 text-yellow-600 border-yellow-100' };
-      case 'accepted': return { label: 'Preparing', color: 'bg-blue-50 text-blue-600 border-blue-100' };
-      case 'delivered': return { label: 'Delivered', color: 'bg-green-50 text-green-600 border-green-100' };
-      case 'rejected': return { label: 'Rejected', color: 'bg-red-50 text-red-600 border-red-100' };
-      default: return { label: status, color: 'bg-gray-50 text-gray-600 border-gray-100' };
-    }
-  };
-
-  const getOrderCounts = (status) => {
-    if (status === 'all') return customerOrders.length;
-    if (status === 'completed') return customerOrders.filter(o => o.status === 'delivered').length;
-    if (status === 'preparing') return customerOrders.filter(o => o.status === 'accepted').length;
-    return customerOrders.filter(o => o.status === status).length;
-  };
+    return { items, revenue };
+  }, [customerOrders]);
 
   if (loading) return <div className="min-h-screen bg-[#F5F1ED] flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B5E3C]"></div></div>;
 
@@ -128,7 +109,6 @@ export default function AdminCustomers() {
                 className="bg-white border border-[#EBE3D5] rounded-3xl p-6 hover:shadow-xl hover:border-[#8B5E3C]/30 transition-all group flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer"
               >
                 <div className="flex flex-col sm:flex-row items-center gap-10 flex-1">
-                  {/* Basic Info */}
                   <div className="min-w-[200px]">
                     <h3 className="text-xl font-black text-[#412918] mb-1">{customer.name}</h3>
                     <p className="text-xs font-bold text-[#8B5E3C] uppercase tracking-widest">Registered Customer</p>
@@ -136,7 +116,6 @@ export default function AdminCustomers() {
 
                   <div className="hidden md:block w-[1px] h-10 bg-gray-100" />
 
-                  {/* Contact Details */}
                   <div className="flex-1 min-w-[200px] flex items-center gap-6">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
@@ -160,11 +139,7 @@ export default function AdminCustomers() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between md:justify-end gap-10 border-t md:border-t-0 pt-6 md:pt-0 border-gray-100">
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total History</p>
-                    <p className="text-2xl font-black text-[#8B5E3C]">{customer.orderCount || 0} Orders</p>
-                  </div>
+                <div className="flex items-center justify-end">
                   <div className="w-12 h-12 rounded-2xl bg-[#F5F1ED] flex items-center justify-center text-[#412918] group-hover:bg-[#412918] group-hover:text-white transition-all shadow-sm">
                     <ChevronRight className="w-5 h-5" />
                   </div>
@@ -197,15 +172,33 @@ export default function AdminCustomers() {
                   className="w-full max-w-[1100px] bg-white rounded-[3rem] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] pointer-events-auto"
                 >
                   <div className="p-8 sm:p-12 border-b border-gray-100 bg-white relative">
-                    <div className="flex items-center gap-6 mb-2">
-                       <div className="w-16 h-16 bg-[#F5F1ED] rounded-3xl flex items-center justify-center text-[#8B5E3C]">
-                          <Users className="w-8 h-8" />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                       <div className="flex items-center gap-6">
+                          <div className="w-16 h-16 bg-[#F5F1ED] rounded-3xl flex items-center justify-center text-[#8B5E3C]">
+                             <Users className="w-8 h-8" />
+                          </div>
+                          <div>
+                             <h2 className="text-3xl font-black text-[#412918]">{selectedCustomer.name}</h2>
+                             <div className="flex items-center gap-4 text-sm text-gray-500 font-bold mt-1">
+                                <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> {selectedCustomer.phone}</span>
+                                <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Bldg {selectedCustomer.building}, Flat {selectedCustomer.flat}</span>
+                             </div>
+                          </div>
                        </div>
-                       <div>
-                          <h2 className="text-3xl font-black text-[#412918]">{selectedCustomer.name}</h2>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 font-bold mt-1">
-                             <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> {selectedCustomer.phone}</span>
-                             <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Bldg {selectedCustomer.building}, Flat {selectedCustomer.flat}</span>
+
+                       {/* Aggregated Stats - NEW */}
+                       <div className="flex gap-6">
+                          <div className="bg-blue-50 border border-blue-100 p-4 rounded-3xl min-w-[160px]">
+                             <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <Package className="w-3 h-3" /> Items Purchased
+                             </p>
+                             <p className="text-2xl font-black text-blue-700">{aggregateStats.items}</p>
+                          </div>
+                          <div className="bg-green-50 border border-green-100 p-4 rounded-3xl min-w-[160px]">
+                             <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                <TrendingUp className="w-3 h-3" /> Total Revenue
+                             </p>
+                             <p className="text-2xl font-black text-green-700">₹{aggregateStats.revenue.toLocaleString()}</p>
                           </div>
                        </div>
                     </div>
@@ -215,50 +208,11 @@ export default function AdminCustomers() {
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-8 sm:p-12 bg-[#FDFBF7]/30">
-                     {/* History List with same style as dashboard */}
-                     <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-10 pb-10 border-b border-[#EBE3D5]">
-                        <div className="relative w-full max-w-md">
-                           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                           <input 
-                              type="text" 
-                              placeholder="Search by order ID..."
-                              value={orderSearchQuery}
-                              onChange={(e) => setOrderSearchQuery(e.target.value)}
-                              className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]/10 text-sm bg-white"
-                           />
-                        </div>
-
-                        <div className="flex flex-wrap justify-center items-center gap-3">
-                           {[
-                              { id: 'all', label: 'All Orders' },
-                              { id: 'pending', label: 'Pending' },
-                              { id: 'preparing', label: 'Preparing' },
-                              { id: 'completed', label: 'Completed' },
-                              { id: 'rejected', label: 'Rejected' }
-                           ].map(tab => (
-                              <button 
-                                 key={tab.id}
-                                 onClick={() => setStatusFilter(tab.id)}
-                                 className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all flex items-center gap-2 ${
-                                    statusFilter === tab.id 
-                                       ? 'bg-[#412918] text-white border-[#412918] shadow-lg' 
-                                       : 'bg-white text-gray-500 border-gray-200 hover:border-[#8B5E3C]/30'
-                                 }`}
-                              >
-                                 {tab.label}
-                                 <span className={`text-[10px] px-2 py-0.5 rounded-md font-black ${statusFilter === tab.id ? 'bg-white/10' : 'bg-gray-100 text-gray-400'}`}>
-                                    {getOrderCounts(tab.id)}
-                                 </span>
-                              </button>
-                           ))}
-                        </div>
-                     </div>
-
                      <div className="space-y-6">
                         {isHistoryLoading ? (
                           <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#8B5E3C]"></div></div>
-                        ) : filteredOrders.length > 0 ? (
-                           filteredOrders.map(order => (
+                        ) : customerOrders.length > 0 ? (
+                           customerOrders.map(order => (
                               <motion.div 
                                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                  key={order.id} 
@@ -289,8 +243,12 @@ export default function AdminCustomers() {
                                     <div className="flex-1 min-w-[180px]">
                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Order Status</p>
                                        <div className="flex items-center gap-2 mb-1">
-                                          <span className={`px-3 py-1 rounded-full text-[11px] font-black flex items-center gap-1.5 border ${getStatusBadge(order.status).color}`}>
-                                             <CheckCircle className="w-3.5 h-3.5" /> {getStatusBadge(order.status).label}
+                                          <span className={`px-3 py-1 rounded-full text-[11px] font-black flex items-center gap-1.5 border uppercase ${
+                                            order.status === 'delivered' ? 'bg-green-50 text-green-600 border-green-100' :
+                                            order.status === 'rejected' ? 'bg-red-50 text-red-600 border-red-100' :
+                                            'bg-yellow-50 text-yellow-600 border-yellow-100'
+                                          }`}>
+                                             {order.status === 'delivered' ? 'Completed' : order.status}
                                           </span>
                                        </div>
                                     </div>
