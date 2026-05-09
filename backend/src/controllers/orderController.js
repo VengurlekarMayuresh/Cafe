@@ -253,7 +253,7 @@ const createOnsiteOrder = async (req, res) => {
     const order = await Order.create({
       user_id: null,
       order_type: 'onsite',
-      status: 'accepted',
+      status: 'delivered',
       handled_by: req.user.id,
       total_price,
       payment_status: 'paid',
