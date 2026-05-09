@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   
   // Tabs State
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' or 'staff'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'staff', or 'analysis'
   
   // Orders Data State
   const [orders, setOrders] = useState([]);
@@ -72,6 +72,32 @@ export default function AdminDashboard() {
       }
     });
     return Object.values(staffStats).sort((a, b) => b.completedCount - a.completedCount);
+  }, [orders]);
+
+  // Compute Product Analysis
+  const productAnalysis = useMemo(() => {
+    const analysis = {};
+    orders.forEach(order => {
+      // We count items from delivered orders
+      if (order.status === 'delivered' && order.items) {
+        order.items.forEach(item => {
+          const productId = item.product_id;
+          if (!analysis[productId]) {
+            analysis[productId] = {
+              id: productId,
+              name: item.product?.name || 'Unknown Product',
+              category: item.product?.category || 'N/A',
+              unitsSold: 0,
+              totalRevenue: 0,
+              image: item.product?.image_url
+            };
+          }
+          analysis[productId].unitsSold += (item.quantity || 0);
+          analysis[productId].totalRevenue += parseFloat(item.price || 0) * (item.quantity || 0);
+        });
+      }
+    });
+    return Object.values(analysis).sort((a, b) => b.unitsSold - a.unitsSold);
   }, [orders]);
 
   // Filtered Orders
@@ -229,10 +255,16 @@ export default function AdminDashboard() {
                  >
                   Staff Performance
                  </button>
+                 <button 
+                  onClick={() => setActiveTab('analysis')}
+                  className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'analysis' ? 'bg-white text-[#412918] shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+                 >
+                  Product Analysis
+                 </button>
               </div>
            </div>
 
-           {activeTab === 'orders' ? (
+           {activeTab === 'orders' && (
              <>
                <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-10 border-b border-gray-100 pb-10">
                   <div className="relative w-full max-w-md">
@@ -333,61 +365,130 @@ export default function AdminDashboard() {
                   )}
                </div>
              </>
-           ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {staffPerformance.length > 0 ? (
-                   staffPerformance.map((staff, idx) => (
-                     <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                        key={staff.id}
-                        className="bg-[#FDFBF7]/40 border border-[#EBE3D5] rounded-[2.5rem] p-8 relative overflow-hidden group hover:shadow-xl hover:border-[#8B5E3C]/30 transition-all"
-                     >
-                        {idx === 0 && (
-                          <div className="absolute top-0 right-0 bg-[#8B5E3C] text-white text-[10px] font-black px-6 py-2 rounded-bl-3xl uppercase tracking-widest shadow-lg z-10">
-                             Top Performer
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-6 mb-8">
-                           <div className="w-20 h-20 rounded-3xl bg-white border-2 border-[#EBE3D5] p-1 shadow-sm overflow-hidden transition-transform">
-                              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${staff.name}`} alt={staff.name} className="w-full h-full" />
-                           </div>
-                           <div>
-                              <h3 className="font-black text-[#412918] text-xl leading-tight mb-1">{staff.name}</h3>
-                              <p className="text-[11px] font-black text-[#8B5E3C] uppercase tracking-widest">Certified Team Member</p>
-                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-8">
-                           <div className="bg-white rounded-2xl p-5 border border-[#EBE3D5] shadow-sm text-center">
-                              <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Orders</p>
-                              <p className="text-3xl font-black text-[#8B5E3C]">{staff.completedCount}</p>
-                           </div>
-                           <div className="bg-white rounded-2xl p-5 border border-[#EBE3D5] shadow-sm text-center">
-                              <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Revenue</p>
-                              <p className="text-xl font-black text-[#412918]">₹{staff.totalRevenue.toLocaleString()}</p>
-                           </div>
-                        </div>
-
-                        <div className="space-y-2">
-                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Recent Activity</p>
-                           {staff.orders.slice(0, 3).map(order => (
-                              <div key={order.id} className="flex items-center justify-between text-[11px] bg-white/50 p-3 rounded-xl border border-white hover:bg-white transition-all">
-                                 <span className="font-bold text-gray-500">#{order.id.slice(0, 6).toUpperCase()}</span>
-                                 <span className="font-black text-[#8B5E3C]">₹{parseFloat(order.total_price).toFixed(2)}</span>
-                              </div>
-                           ))}
-                        </div>
-                     </motion.div>
-                   ))
-                ) : (
-                   <div className="col-span-full text-center py-24 text-gray-400">
-                      <Users className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                      <p className="text-lg font-bold">No performance data available yet.</p>
-                   </div>
-                )}
-             </div>
            )}
+
+           {activeTab === 'staff' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+               {staffPerformance.length > 0 ? (
+                  staffPerformance.map((staff, idx) => (
+                    <motion.div 
+                       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                       key={staff.id}
+                       className="bg-[#FDFBF7]/40 border border-[#EBE3D5] rounded-[2.5rem] p-8 relative overflow-hidden group hover:shadow-xl hover:border-[#8B5E3C]/30 transition-all"
+                    >
+                       {idx === 0 && (
+                         <div className="absolute top-0 right-0 bg-[#8B5E3C] text-white text-[10px] font-black px-6 py-2 rounded-bl-3xl uppercase tracking-widest shadow-lg z-10">
+                            Top Performer
+                         </div>
+                       )}
+                       
+                       <div className="flex items-center gap-6 mb-8">
+                          <div className="w-20 h-20 rounded-3xl bg-white border-2 border-[#EBE3D5] p-1 shadow-sm overflow-hidden transition-transform">
+                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${staff.name}`} alt={staff.name} className="w-full h-full" />
+                          </div>
+                          <div>
+                             <h3 className="font-black text-[#412918] text-xl leading-tight mb-1">{staff.name}</h3>
+                             <p className="text-[11px] font-black text-[#8B5E3C] uppercase tracking-widest">Certified Team Member</p>
+                          </div>
+                       </div>
+
+                       <div className="grid grid-cols-2 gap-4 mb-8">
+                          <div className="bg-white rounded-2xl p-5 border border-[#EBE3D5] shadow-sm text-center">
+                             <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Orders</p>
+                             <p className="text-3xl font-black text-[#8B5E3C]">{staff.completedCount}</p>
+                          </div>
+                          <div className="bg-white rounded-2xl p-5 border border-[#EBE3D5] shadow-sm text-center">
+                             <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Revenue</p>
+                             <p className="text-xl font-black text-[#412918]">₹{staff.totalRevenue.toLocaleString()}</p>
+                          </div>
+                       </div>
+
+                       <div className="space-y-2">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Recent Activity</p>
+                          {staff.orders.slice(0, 3).map(order => (
+                             <div key={order.id} className="flex items-center justify-between text-[11px] bg-white/50 p-3 rounded-xl border border-white hover:bg-white transition-all">
+                                <span className="font-bold text-gray-500">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                <span className="font-black text-[#8B5E3C]">₹{parseFloat(order.total_price).toFixed(2)}</span>
+                             </div>
+                          ))}
+                       </div>
+                    </motion.div>
+                  ))
+               ) : (
+                  <div className="col-span-full text-center py-24 text-gray-400">
+                     <Users className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                     <p className="text-lg font-bold">No performance data available yet.</p>
+                  </div>
+               )}
+            </div>
+           )}
+
+            {activeTab === 'analysis' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="pb-6 pt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest pl-4">Product Details</th>
+                      <th className="pb-6 pt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</th>
+                      <th className="pb-6 pt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Units Sold</th>
+                      <th className="pb-6 pt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right pr-4">Total Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productAnalysis.length > 0 ? (
+                      productAnalysis.map((item, idx) => (
+                        <motion.tr 
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          key={item.id} 
+                          className="group hover:bg-[#FDFBF7] transition-colors"
+                        >
+                          <td className="py-5 pl-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-[#F5F1ED] rounded-xl overflow-hidden flex items-center justify-center border border-gray-100">
+                                {item.image ? (
+                                  <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <Package className="w-5 h-5 text-gray-300" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-black text-[#412918] text-sm">{item.name}</p>
+                                <p className="text-[10px] font-bold text-[#8B5E3C] uppercase">#{item.id.slice(0, 8)}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-5">
+                            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                              {item.category}
+                            </span>
+                          </td>
+                          <td className="py-5 text-center">
+                            <div className="flex flex-col items-center">
+                              <p className="font-black text-[#412918] text-lg">{item.unitsSold}</p>
+                              <p className="text-[9px] font-bold text-gray-400 uppercase">Items</p>
+                            </div>
+                          </td>
+                          <td className="py-5 text-right pr-4">
+                            <p className="font-black text-[#8B5E3C] text-lg">₹{item.totalRevenue.toLocaleString()}</p>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase">Revenue Collected</p>
+                          </td>
+                        </motion.tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="py-24 text-center">
+                          <AlertCircle className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                          <p className="text-lg font-bold text-[#412918]">No sales data available</p>
+                          <p className="text-gray-400 text-sm">Products from delivered orders will appear here.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
         </div>
 
       </div>
