@@ -22,10 +22,6 @@ const authenticate = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'ACCOUNT_BLOCKED', message: 'Your account has been blocked' });
     }
 
-    if (user.status === 'pending') {
-      return res.status(403).json({ success: false, error: 'ACCOUNT_PENDING', message: 'Your account is pending approval' });
-    }
-
     req.user = user;
     next();
   } catch (error) {
