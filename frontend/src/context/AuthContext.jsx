@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import api from '../utils/api';
 
 const AuthContext = createContext(null);
@@ -30,6 +30,46 @@ export const AuthProvider = ({ children }) => {
     };
     verifyToken();
   }, [token]);
+
+  const [dashboardCounts, setDashboardCounts] = useState({ pendingUsers: 0, pendingOrders: 0, acceptedOrders: 0 });
+  const prevPendingCount = useRef(0);
+
+  // Simple Global Polling (1 minute)
+  useEffect(() => {
+    if (!token || (user?.role !== 'admin' && user?.role !== 'staff')) return;
+
+    const pollData = async () => {
+      try {
+        // Pull orders and pending users
+        const [ordersRes, usersRes] = await Promise.all([
+          api.get('/orders'),
+          user.role === 'admin' ? api.get('/admin/users/pending') : Promise.resolve({ data: [] })
+        ]);
+
+        const orders = ordersRes.data.data || ordersRes.data || [];
+        const pendingUsers = usersRes.data || usersRes || [];
+
+        const counts = {
+          pendingUsers: pendingUsers.length,
+          pendingOrders: orders.filter(o => o.status === 'pending').length,
+          acceptedOrders: orders.filter(o => o.status === 'accepted' && (user.role === 'admin' || o.handled_by === user.id)).length
+        };
+
+        if (counts.pendingOrders > prevPendingCount.current) {
+          window.dispatchEvent(new CustomEvent('new-order-alert', { detail: counts.pendingOrders }));
+        }
+
+        prevPendingCount.current = counts.pendingOrders;
+        setDashboardCounts(counts);
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    };
+
+    pollData();
+    const interval = setInterval(pollData, 60000);
+    return () => clearInterval(interval);
+  }, [token, user?.role]);
 
   const googleLogin = async () => {
     try {
@@ -68,7 +108,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, setUser, googleLogin, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, setUser, googleLogin, logout, loading, dashboardCounts }}>
       {children}
     </AuthContext.Provider>
   );

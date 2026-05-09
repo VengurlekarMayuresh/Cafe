@@ -30,9 +30,15 @@ export default function POS() {
     try {
       setLoading(true);
       const res = await api.get('/products');
-      setProducts(res.data || res);
+      
+      // Handle the nested structure from backend { success: true, data: [...] }
+      const data = res.data || res;
+      const productList = Array.isArray(data) ? data : (data.data || []);
+      
+      setProducts(productList);
     } catch (err) {
       console.error('Failed to fetch products:', err);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -172,31 +178,45 @@ export default function POS() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredProducts.map(product => (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className="bg-white p-4 rounded-3xl border border-[#EBE3D5] hover:border-[#8B5E3C] hover:shadow-xl transition-all text-left flex flex-col gap-3 group h-full"
-              >
-                <div className="w-full aspect-square bg-[#F5F1ED] rounded-2xl overflow-hidden relative">
-                   {product.image_url ? (
-                     <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center text-[#D4A373]">
-                        <Coffee className="w-8 h-8 opacity-50" />
+            {filteredProducts.length === 0 ? (
+              <div className="col-span-full py-20 text-center bg-white rounded-3xl border border-[#EBE3D5]">
+                 <Package className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                 <h3 className="text-lg font-bold text-[#412918]">No products available</h3>
+                 <p className="text-gray-400 text-sm mb-6">Either no items match your filters or the menu is empty.</p>
+                 <button 
+                  onClick={() => { setActiveCategory('All'); setSearchQuery(''); }}
+                  className="bg-[#412918] text-white px-6 py-2 rounded-xl text-xs font-bold"
+                 >
+                  Clear Filters
+                 </button>
+              </div>
+            ) : (
+              filteredProducts.map(product => (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  key={product.id}
+                  onClick={() => addToCart(product)}
+                  className="bg-white p-4 rounded-3xl border border-[#EBE3D5] hover:border-[#8B5E3C] hover:shadow-xl transition-all text-left flex flex-col gap-3 group h-full"
+                >
+                  <div className="w-full aspect-square bg-[#F5F1ED] rounded-2xl overflow-hidden relative">
+                     {product.image_url ? (
+                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                     ) : (
+                       <div className="w-full h-full flex items-center justify-center text-[#D4A373]">
+                          <Coffee className="w-8 h-8 opacity-50" />
+                       </div>
+                     )}
+                     <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-[9px] font-black px-2 py-0.5 rounded-full text-[#412918] shadow-sm">
+                        {product.category}
                      </div>
-                   )}
-                   <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-[9px] font-black px-2 py-0.5 rounded-full text-[#412918] shadow-sm">
-                      {product.category}
-                   </div>
-                </div>
-                <div>
-                  <h3 className="font-bold text-[#412918] text-sm line-clamp-1 mb-0.5">{product.name}</h3>
-                  <p className="text-[#8B5E3C] font-black text-base">₹{parseFloat(product.price).toFixed(2)}</p>
-                </div>
-              </motion.button>
-            ))}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#412918] text-sm line-clamp-1 mb-0.5">{product.name}</h3>
+                    <p className="text-[#8B5E3C] font-black text-base">₹{parseFloat(product.price).toFixed(2)}</p>
+                  </div>
+                </motion.button>
+              ))
+            )}
           </div>
         </div>
 

@@ -15,7 +15,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, dashboardCounts } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,22 +47,7 @@ export default function Navbar() {
     return () => window.removeEventListener('storage', updateCartCount);
   }, []);
 
-  useEffect(() => {
-    if (user?.role === 'staff' || user?.role === 'admin') {
-      const checkPending = async () => {
-        try {
-          const res = await api.get('/orders', { params: { status: 'pending' } });
-          const pendingOrders = res.data || res;
-          setHasPendingOrders(pendingOrders.length > 0);
-        } catch (e) {
-          console.error('Failed to check pending orders');
-        }
-      };
-      checkPending();
-      const interval = setInterval(checkPending, 15000); // Check every 15s
-      return () => clearInterval(interval);
-    }
-  }, [user]);
+
 
   const handleLogout = () => {
     logout();
@@ -80,9 +65,19 @@ export default function Navbar() {
   }
 
   if (user?.role === 'admin') {
-    navLinks.push({ name: 'Dashboard', path: '/admin', hasBadge: hasPendingOrders });
+    navLinks.push({ 
+      name: 'Dashboard', 
+      path: '/admin', 
+      hasRedDot: (dashboardCounts?.pendingUsers > 0 || dashboardCounts?.pendingOrders > 0),
+      isBlinking: (dashboardCounts?.pendingUsers > 0)
+    });
   } else if (user?.role === 'staff') {
-    navLinks.push({ name: 'Dashboard', path: '/staff', hasBadge: hasPendingOrders });
+    navLinks.push({ 
+      name: 'Dashboard', 
+      path: '/staff', 
+      hasRedDot: (dashboardCounts?.pendingOrders > 0),
+      hasGreenDot: (dashboardCounts?.acceptedOrders > 0)
+    });
   } else {
     navLinks.push({ name: 'Orders', path: '/orders' });
   }
@@ -122,10 +117,15 @@ export default function Navbar() {
                     }`}
                   >
                     {link.name}
-                    {link.hasBadge && (
-                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    {link.hasRedDot && (
+                      <span className="absolute -top-1 -right-2 flex h-2.5 w-2.5">
+                        {link.isBlinking && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>}
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600 border border-white"></span>
+                      </span>
+                    )}
+                    {link.hasGreenDot && (
+                      <span className={`absolute -top-1 ${link.hasRedDot ? '-right-5' : '-right-2'} flex h-2.5 w-2.5`}>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 border border-white"></span>
                       </span>
                     )}
                     {isActive && (

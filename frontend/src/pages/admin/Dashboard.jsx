@@ -25,8 +25,6 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 30000); // Live refresh every 30s
-    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {

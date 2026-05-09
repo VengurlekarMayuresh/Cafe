@@ -7,18 +7,19 @@ import { useAuth } from '../../context/AuthContext';
 import InvoiceModal from '../../components/InvoiceModal';
 
 export default function StaffDashboard() {
-  const { user } = useAuth();
+  const { user, dashboardCounts } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (showLoading = true) => {
     try {
-      setLoading(true);
-      const res = await api.get('/orders', { params: { status: activeTab === 'all' ? undefined : activeTab } });
-      let fetchedOrders = res.data || res;
+      if (showLoading) setLoading(true);
+      // Fetch all orders relevant to staff (pending + their handled ones)
+      const res = await api.get('/orders');
+      let fetchedOrders = res.data.data || res.data || [];
 
       if (user?.role === 'staff') {
         fetchedOrders = fetchedOrders.filter(
@@ -31,13 +32,15 @@ export default function StaffDashboard() {
     } catch (err) {
       console.error('Failed to fetch orders:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchOrders();
-  }, [activeTab, user]);
+    const interval = setInterval(() => fetchOrders(false), 60000); // Auto-refresh every minute
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleAction = async (orderId, action, extraData = {}) => {
     try {
@@ -46,14 +49,9 @@ export default function StaffDashboard() {
         setSelectedOrder(null);
       }
       setShowPaymentPrompt(false);
+      fetchOrders(false); // Refresh after action
     } catch (err) {
       alert(err.message || `Failed to ${action} order.`);
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder(null);
-      }
-      setShowPaymentPrompt(false);
-    } finally {
-      fetchOrders();
     }
   };
 
@@ -110,25 +108,37 @@ export default function StaffDashboard() {
           </h2>
           
           <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2 sm:pb-0">
-            {['pending', 'accepted', 'delivered', 'rejected', 'all'].map(tab => (
-              <button 
-                key={tab} 
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm ${
-                  activeTab === tab 
-                    ? 'bg-[#412918] text-white' 
-                    : 'bg-white text-gray-500 border border-[#EBE3D5] hover:bg-[#EBE3D5]'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
+            {['pending', 'accepted', 'delivered', 'rejected', 'all'].map(tab => {
+              const count = orders.filter(o => o.status === tab).length;
+              const hasDot = count > 0;
+              const dotColor = tab === 'pending' ? 'bg-red-500' : 'bg-green-500';
+
+              return (
+                <button 
+                  key={tab} 
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2.5 rounded-full text-[11px] font-black transition-all shadow-sm flex items-center justify-center relative ${
+                    activeTab === tab 
+                      ? 'bg-[#412918] text-white shadow-lg shadow-[#412918]/20' 
+                      : 'bg-white text-gray-500 border border-[#EBE3D5] hover:bg-[#EBE3D5]'
+                  }`}
+                >
+                  {tab.toUpperCase()}
+                  {hasDot && (tab === 'pending' || tab === 'accepted') && (
+                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                       {tab === 'pending' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>}
+                       <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${dotColor} border border-white shadow-sm`}></span>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#8B5E3C]"></div></div>
-        ) : orders.length === 0 ? (
+        ) : orders.filter(o => activeTab === 'all' || o.status === activeTab).length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-[#EBE3D5]">
             <Coffee className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-[#412918]">No {activeTab !== 'all' ? activeTab : ''} orders found</h2>
@@ -136,7 +146,9 @@ export default function StaffDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {orders.map(order => {
+            {orders
+              .filter(o => activeTab === 'all' || o.status === activeTab)
+              .map(order => {
               const statusConfig = getStatusConfig(order.status);
               const StatusIcon = statusConfig.icon;
               const { date, time } = formatDate(order.createdAt || order.created_at);

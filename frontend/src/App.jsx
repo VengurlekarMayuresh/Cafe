@@ -17,6 +17,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminCustomers from './pages/admin/Customers';
 import Footer from './components/Footer';
+import NewOrderAlert from './components/NewOrderAlert';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
       <BrowserRouter>
         <div className="flex flex-col min-h-screen">
           <Navbar />
+          <NewOrderAlert />
           <main className="flex-grow">
             <Routes>
               {/* Public Routes */}
