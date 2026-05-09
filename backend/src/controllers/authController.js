@@ -1,6 +1,7 @@
-const { User } = require('../models');
+const { User, Order } = require('../models');
 const { generateToken } = require('../utils/jwt');
 const { registerSchema, loginSchema } = require('../utils/validator');
+const { Op } = require('sequelize');
 const admin = require('../config/firebase');
 
 const register = async (req, res) => {
@@ -168,4 +169,32 @@ const me = async (req, res) => {
   res.json({ success: true, data: { ...userData, isIncomplete } });
 };
 
-module.exports = { register, login, googleLogin, updateProfile, me };
+const getDashboardCounts = async (req, res) => {
+  try {
+    const counts = {
+      pendingUsers: 0,
+      pendingOrders: 0,
+      acceptedOrders: 0
+    };
+
+    if (req.user.role === 'admin') {
+      counts.pendingUsers = await User.count({ where: { status: 'pending' } });
+    }
+
+    if (req.user.role === 'staff' || req.user.role === 'admin') {
+      counts.pendingOrders = await Order.count({ where: { status: 'pending' } });
+      
+      const acceptedWhere = { status: 'accepted' };
+      if (req.user.role === 'staff') {
+        acceptedWhere.handled_by = req.user.id;
+      }
+      counts.acceptedOrders = await Order.count({ where: acceptedWhere });
+    }
+
+    res.json({ success: true, data: counts });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { register, login, googleLogin, updateProfile, me, getDashboardCounts };

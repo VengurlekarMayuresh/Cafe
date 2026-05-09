@@ -119,13 +119,20 @@ const createOrder = async (req, res) => {
 
 const acceptOrder = async (req, res) => {
   try {
-    const order = await Order.findByPk(req.params.id);
+    const order = await Order.findByPk(req.params.id, {
+      include: [{ model: User, as: 'handler', attributes: ['name'] }]
+    });
     if (!order) {
       return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Order not found' });
     }
 
-    if (order.status !== 'pending') {
-      return res.status(400).json({ success: false, error: 'INVALID_STATE', message: 'Order already accepted or rejected' });
+    if (order.status !== 'pending' || order.handled_by) {
+      const handlerName = order.handler ? order.handler.name : 'another staff member';
+      return res.status(409).json({ 
+        success: false, 
+        error: 'ALREADY_ASSIGNED', 
+        message: `This order has already been taken by ${handlerName}` 
+      });
     }
 
     await order.update({ status: 'accepted', handled_by: req.user.id });
