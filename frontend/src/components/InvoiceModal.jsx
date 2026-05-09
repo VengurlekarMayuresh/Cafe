@@ -46,8 +46,14 @@ export default function InvoiceModal({
               <div>
                 <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase mb-1 md:mb-2 tracking-wider">Bill To:</p>
                 <p className="font-bold text-[#412918] text-base">{order.customer?.name || 'Walk-in Customer'}</p>
-                <p className="text-xs md:text-sm text-gray-500 font-medium truncate">Bldg {order.customer?.building || 'N/A'}, Flat {order.customer?.flat || 'N/A'}</p>
-                <p className="text-xs md:text-sm text-gray-500 font-medium">📞 {order.customer?.phone || 'N/A'}</p>
+                {order.order_type !== 'onsite' && order.customer && (
+                  <>
+                    <p className="text-xs md:text-sm text-gray-500 font-medium truncate">
+                      Bldg {order.customer.building || 'N/A'}, Flat {order.customer.flat || 'N/A'}
+                    </p>
+                    <p className="text-xs md:text-sm text-gray-500 font-medium">📞 {order.customer.phone || 'N/A'}</p>
+                  </>
+                )}
               </div>
               <div className="sm:text-right">
                 <div className="mb-3">
@@ -181,27 +187,25 @@ export default function InvoiceModal({
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[400px] bg-white rounded-3xl shadow-2xl z-[160] overflow-hidden"
             >
-              <div className="p-6 text-center">
-                <div className="w-16 h-16 bg-[#F5F1ED] rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-[#F5F1ED] rounded-full flex items-center justify-center mx-auto mb-8">
                   <ShoppingBag className="w-8 h-8 text-[#8B5E3C]" />
                 </div>
-                <h3 className="text-xl font-bold text-[#412918] mb-2">Select Payment Method</h3>
-                <p className="text-sm text-gray-500 mb-6">How did the customer pay for this order?</p>
                 
                 <div className="grid grid-cols-1 gap-3">
                   <button 
                     onClick={() => onAction(order.id, 'deliver', { payment_method: 'online' })}
-                    className="py-4 rounded-2xl font-bold bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex flex-col items-center gap-1"
+                    className="py-5 rounded-2xl font-black bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex flex-col items-center justify-center active:scale-95 gap-1"
                   >
-                    <span className="text-lg">Online Payment</span>
-                    <span className="text-[10px] opacity-80 uppercase tracking-widest">UPI / Card / App</span>
+                    <span className="text-xl">Online / UPI</span>
+                    <span className="text-[10px] opacity-70 uppercase tracking-widest font-bold">Scan QR or Pay via App</span>
                   </button>
                   <button 
                     onClick={() => onAction(order.id, 'deliver', { payment_method: 'offline' })}
-                    className="py-4 rounded-2xl font-bold bg-[#8B5E3C] text-white shadow-lg shadow-amber-200 hover:bg-[#6c482e] transition-all flex flex-col items-center gap-1"
+                    className="py-5 rounded-2xl font-black bg-[#412918] text-white shadow-lg shadow-gray-200 hover:bg-[#5a3f2c] transition-all flex flex-col items-center justify-center active:scale-95 gap-1"
                   >
-                    <span className="text-lg">Cash / Offline</span>
-                    <span className="text-[10px] opacity-80 uppercase tracking-widest">Collected at counter</span>
+                    <span className="text-xl">Cash</span>
+                    <span className="text-[10px] opacity-70 uppercase tracking-widest font-bold">Received at Counter</span>
                   </button>
                   <button 
                     onClick={() => setShowPaymentPrompt(false)}

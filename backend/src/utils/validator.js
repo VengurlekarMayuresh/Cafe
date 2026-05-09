@@ -20,6 +20,7 @@ const createOrderSchema = Joi.object({
       qty: Joi.number().integer().min(1).required(),
     })
   ).min(1).required(),
+  payment_method: Joi.string().valid('online', 'offline').optional(),
 });
 
 const productSchema = Joi.object({

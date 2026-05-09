@@ -85,16 +85,20 @@ export default function POS() {
     return cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.qty), 0);
   }, [cart]);
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (paymentMethod = 'offline') => {
     if (cart.length === 0 || isPlacing) return;
     
     try {
       setIsPlacing(true);
       const items = cart.map(item => ({ product_id: item.id, qty: item.qty }));
-      const res = await api.post('/orders/onsite', { items });
+      const res = await api.post('/orders/onsite', { 
+        items,
+        payment_method: paymentMethod 
+      });
       
       setCreatedOrder(res.data?.data || res.data || res);
       setCart([]);
+      setShowConfirm(false);
     } catch (err) {
       alert(err.message || 'Failed to place order');
     } finally {
@@ -112,17 +116,55 @@ export default function POS() {
   return (
     <div className="min-h-screen bg-[#F5F1ED] flex flex-col">
       
-      {/* Confirmation Modal */}
-      <ConfirmationModal 
-        isOpen={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={handlePlaceOrder}
-        title="Place Order?"
-        message={`Are you sure you want to place this on-site order for ₹${total.toFixed(2)}?`}
-        confirmText="Yes, Place Order"
-        icon={ShoppingBag}
-        confirmColor="bg-[#412918]"
-      />
+      {/* Payment Selection Modal */}
+      <AnimatePresence>
+        {showConfirm && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowConfirm(false)}
+              className="fixed inset-0 bg-black/60 z-[200] backdrop-blur-sm"
+            />
+            <div className="fixed inset-0 z-[210] flex items-center justify-center p-4 pointer-events-none">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="w-full max-w-[400px] bg-white rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto"
+              >
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 bg-[#F5F1ED] rounded-full flex items-center justify-center mx-auto mb-8">
+                    <ShoppingBag className="w-8 h-8 text-[#8B5E3C]" />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    <button 
+                      onClick={() => handlePlaceOrder('online')}
+                      className="py-5 rounded-2xl font-black bg-blue-600 text-white shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex flex-col items-center justify-center active:scale-95 gap-1"
+                    >
+                      <span className="text-xl">Online / UPI</span>
+                      <span className="text-[10px] opacity-70 uppercase tracking-widest font-bold">Scan QR or Pay via App</span>
+                    </button>
+                    <button 
+                      onClick={() => handlePlaceOrder('offline')}
+                      className="py-5 rounded-2xl font-black bg-[#412918] text-white shadow-xl shadow-gray-200 hover:bg-[#5a3f2c] transition-all flex flex-col items-center justify-center active:scale-95 gap-1"
+                    >
+                      <span className="text-xl">Cash</span>
+                      <span className="text-[10px] opacity-70 uppercase tracking-widest font-bold">Received at Counter</span>
+                    </button>
+                    <button 
+                      onClick={() => setShowConfirm(false)}
+                      className="mt-4 py-2 text-sm font-bold text-gray-400 hover:text-gray-600 uppercase tracking-widest"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* POS Header */}
       <div className="bg-[#412918] text-white px-4 md:px-6 py-3 md:py-4 flex items-center justify-between shadow-lg sticky top-0 z-50">

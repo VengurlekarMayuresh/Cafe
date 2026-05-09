@@ -249,6 +249,7 @@ const createOnsiteOrder = async (req, res) => {
       return sum + (parseFloat(productMap[item.product_id].price) * item.qty);
     }, 0);
 
+    const { payment_method } = req.body;
     const order = await Order.create({
       user_id: null,
       order_type: 'onsite',
@@ -256,6 +257,7 @@ const createOnsiteOrder = async (req, res) => {
       handled_by: req.user.id,
       total_price,
       payment_status: 'paid',
+      payment_method: payment_method || 'offline'
     });
 
     const items = value.items.map(item => ({
