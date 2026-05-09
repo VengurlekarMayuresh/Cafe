@@ -63,6 +63,10 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ success: false, error: 'VALIDATION_ERROR', message: error.details[0].message });
     }
 
+    if (req.user.status !== 'approved') {
+      return res.status(403).json({ success: false, error: 'NOT_APPROVED', message: 'Your account is pending approval by the admin. You cannot place orders yet.' });
+    }
+
     const productIds = value.items.map(i => i.product_id);
     const products = await Product.findAll({ where: { id: productIds, is_available: true } });
 
