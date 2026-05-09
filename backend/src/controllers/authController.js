@@ -79,10 +79,22 @@ const googleLogin = async (req, res) => {
   const { idToken, googleId, email, name } = req.body; 
 
   try {
+    if (!idToken) {
+       return res.status(400).json({ success: false, message: 'Missing ID Token' });
+    }
+
     // Verify Firebase ID Token
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(idToken);
+    } catch (verifyErr) {
+      console.error('Firebase Token Verification Failed:', verifyErr.message);
+      return res.status(401).json({ success: false, error: 'INVALID_TOKEN', message: 'Token verification failed: ' + verifyErr.message });
+    }
+
     if (!decodedToken || decodedToken.uid !== googleId) {
-      return res.status(401).json({ success: false, error: 'INVALID_TOKEN', message: 'Invalid authentication token' });
+      console.error('Token UID mismatch. Decoded:', decodedToken?.uid, 'Provided:', googleId);
+      return res.status(401).json({ success: false, error: 'INVALID_TOKEN', message: 'Authentication mismatch' });
     }
 
     let user = await User.findOne({ where: { googleId } });
@@ -92,6 +104,7 @@ const googleLogin = async (req, res) => {
       if (user) {
         // Link googleId to existing account
         await user.update({ googleId });
+        console.log('Linked Google ID to existing user:', email);
       } else {
         // Create new user
         user = await User.create({
@@ -101,6 +114,7 @@ const googleLogin = async (req, res) => {
           status: 'pending',
           role: 'customer'
         });
+        console.log('Created new Google user:', email);
       }
     }
 
@@ -112,12 +126,11 @@ const googleLogin = async (req, res) => {
 
     res.json({ success: true, data: { user: userData, token, isIncomplete } });
   } catch (err) {
-    console.error('Backend Google Login Error:', err);
+    console.error('Backend Google Login Critical Error:', err);
     res.status(500).json({ 
       success: false, 
       error: 'SERVER_ERROR', 
-      message: err.message,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+      message: 'Login processing failed: ' + err.message
     });
   }
 };
