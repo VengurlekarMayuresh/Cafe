@@ -11,12 +11,13 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
+  // 1. Handle Redirect Result on Mount
   useEffect(() => {
-    const verifyToken = async () => {
-      // Check for Firebase Redirect Result (for production stability)
+    const processRedirect = async () => {
       try {
         const { handleRedirectResult } = await import('../utils/firebase');
         const firebaseUser = await handleRedirectResult();
+        
         if (firebaseUser) {
           const idToken = await firebaseUser.getIdToken();
           const res = await api.post('/auth/google-login', { 
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }) => {
             name: firebaseUser.displayName,
             googleId: firebaseUser.uid 
           });
+          
           const { user: userData, token: userToken } = res.data.data || res.data;
           localStorage.setItem('token', userToken);
           localStorage.setItem('user', JSON.stringify(userData));
@@ -32,10 +34,24 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
         }
       } catch (err) {
-        console.error("Auth Redirect Processing Error:", err);
+        console.error("Critical Auth Redirect Error:", err);
+      } finally {
+        // Only set loading false if we don't have a token to verify
+        if (!localStorage.getItem('token')) {
+          setLoading(false);
+        }
       }
+    };
+    processRedirect();
+  }, []);
 
-      if (!token) { setLoading(false); return; }
+  // 2. Verify Existing Token
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!token) { 
+        setLoading(false); 
+        return; 
+      }
       try {
         const res = await api.get('/auth/me');
         const userData = res.data.data || res.data;
