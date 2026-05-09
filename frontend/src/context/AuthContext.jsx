@@ -13,6 +13,28 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const verifyToken = async () => {
+      // Check for Firebase Redirect Result (for production stability)
+      try {
+        const { handleRedirectResult } = await import('../utils/firebase');
+        const firebaseUser = await handleRedirectResult();
+        if (firebaseUser) {
+          const idToken = await firebaseUser.getIdToken();
+          const res = await api.post('/auth/google-login', { 
+            idToken,
+            email: firebaseUser.email,
+            name: firebaseUser.displayName,
+            googleId: firebaseUser.uid 
+          });
+          const { user: userData, token: userToken } = res.data.data || res.data;
+          localStorage.setItem('token', userToken);
+          localStorage.setItem('user', JSON.stringify(userData));
+          setToken(userToken);
+          setUser(userData);
+        }
+      } catch (err) {
+        console.error("Auth Redirect Processing Error:", err);
+      }
+
       if (!token) { setLoading(false); return; }
       try {
         const res = await api.get('/auth/me');
@@ -20,7 +42,6 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
       } catch (err) {
-        // If 401 or 403, clear session
         if (err.response?.status === 401 || err.response?.status === 403) {
           logout();
         }
