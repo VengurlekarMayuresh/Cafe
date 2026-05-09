@@ -27,90 +27,88 @@ export default function InvoiceModal({
           className="w-full max-w-[500px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh] pointer-events-auto"
         >
           {/* Header - Invoice Style */}
-          <div className="p-8 border-b-2 border-dashed border-[#EBE3D5] bg-white relative">
+          <div className="p-5 md:p-8 border-b-2 border-dashed border-[#EBE3D5] bg-white relative">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                   <Coffee className="w-6 h-6 text-[#8B5E3C]" />
-                   <h1 className="text-2xl font-serif font-black text-[#412918] tracking-tight">SOCIETY CAFÉ</h1>
+                   <Coffee className="w-5 h-5 md:w-6 md:h-6 text-[#8B5E3C]" />
+                   <h1 className="text-xl md:text-2xl font-serif font-black text-[#412918] tracking-tight">SOCIETY CAFÉ</h1>
                 </div>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">Good Food, Close to Home</p>
+                <p className="text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">Good Food, Close to Home</p>
               </div>
               <div className="text-right">
-                <h2 className="text-3xl font-black text-[#EBE3D5] leading-none mb-1">INVOICE</h2>
-                <p className="text-xs font-bold text-[#8B5E3C]">#{order.id.slice(0, 8).toUpperCase()}</p>
+                <h2 className="text-2xl md:text-3xl font-black text-[#EBE3D5] leading-none mb-1">INVOICE</h2>
+                <p className="text-[10px] md:text-xs font-bold text-[#8B5E3C]">#{order.id.slice(0, 8).toUpperCase()}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-8 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8 text-sm">
               <div>
-                <p className="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-wider">Bill To:</p>
+                <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase mb-1 md:mb-2 tracking-wider">Bill To:</p>
                 <p className="font-bold text-[#412918] text-base">{order.customer?.name || 'Walk-in Customer'}</p>
-                <p className="text-gray-500 font-medium">Bldg {order.customer?.building || 'N/A'}, Flat {order.customer?.flat || 'N/A'}</p>
-                <p className="text-gray-500 font-medium">📞 {order.customer?.phone || 'N/A'}</p>
+                <p className="text-xs md:text-sm text-gray-500 font-medium truncate">Bldg {order.customer?.building || 'N/A'}, Flat {order.customer?.flat || 'N/A'}</p>
+                <p className="text-xs md:text-sm text-gray-500 font-medium">📞 {order.customer?.phone || 'N/A'}</p>
               </div>
-              <div className="text-right">
+              <div className="sm:text-right">
                 <div className="mb-3">
-                  <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-wider">Date & Time:</p>
-                  <p className="font-bold text-[#412918]">{new Date(order.createdAt || order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                  <p className="text-xs font-medium text-gray-500">{new Date(order.createdAt || order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase mb-1 tracking-wider">Date & Time:</p>
+                  <p className="font-bold text-[#412918] text-xs md:text-sm">{new Date(order.createdAt || order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                  <p className="text-[10px] md:text-xs font-medium text-gray-500">{new Date(order.createdAt || order.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-wider">Billing Mode:</p>
-                  <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${order.order_type === 'online' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                  <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase mb-1 tracking-wider">Billing Mode:</p>
+                  <span className={`inline-block px-2 py-0.5 rounded text-[9px] md:text-[10px] font-black uppercase tracking-wider ${order.order_type === 'online' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
                     {order.order_type} Order
                   </span>
                 </div>
               </div>
             </div>
-
-
           </div>
 
           {/* Invoice Body */}
-          <div className="flex-1 overflow-y-auto p-8 bg-white" id="invoice-content">
+          <div className="flex-1 overflow-y-auto p-5 md:p-8 bg-white" id="invoice-content">
             <div className="w-full mb-6">
-              <div className="flex text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2 mb-4">
+              <div className="flex text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2 mb-4">
                 <span className="flex-1">Description</span>
-                <span className="w-16 text-center">Qty</span>
-                <span className="w-24 text-right">Price</span>
-                <span className="w-24 text-right">Total</span>
+                <span className="w-10 md:w-16 text-center">Qty</span>
+                <span className="w-16 md:w-24 text-right hidden xs:block">Price</span>
+                <span className="w-20 md:w-24 text-right">Total</span>
               </div>
               
               <div className="space-y-4">
                 {order.items?.map(item => (
-                  <div key={item.id} className="flex items-center text-sm">
+                  <div key={item.id} className="flex items-center text-xs md:text-sm">
                     <div className="flex-1">
-                      <p className="font-bold text-[#412918]">{item.product?.name || 'Unknown Item'}</p>
-                      <p className="text-[10px] text-gray-400">Unit Price: ₹{parseFloat(item.price).toFixed(2)}</p>
+                      <p className="font-bold text-[#412918] line-clamp-1">{item.product?.name || 'Unknown Item'}</p>
+                      <p className="text-[9px] md:text-[10px] text-gray-400">Unit: ₹{parseFloat(item.price).toFixed(2)}</p>
                     </div>
-                    <span className="w-16 text-center font-bold text-gray-600">x{item.quantity}</span>
-                    <span className="w-24 text-right font-medium text-gray-500">₹{parseFloat(item.price).toFixed(2)}</span>
-                    <span className="w-24 text-right font-bold text-[#412918]">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                    <span className="w-10 md:w-16 text-center font-bold text-gray-600 text-xs">x{item.quantity}</span>
+                    <span className="w-16 md:w-24 text-right font-medium text-gray-500 hidden xs:block">₹{parseFloat(item.price).toFixed(2)}</span>
+                    <span className="w-20 md:w-24 text-right font-bold text-[#412918]">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mt-8 pt-6 border-t-2 border-dashed border-[#EBE3D5] space-y-2">
-               <div className="flex justify-between items-center text-sm font-medium text-gray-500">
+               <div className="flex justify-between items-center text-xs md:text-sm font-medium text-gray-500">
                   <span>Subtotal</span>
                   <span>₹{parseFloat(order.total_price).toFixed(2)}</span>
                </div>
-               <div className="flex justify-between items-center text-sm font-medium text-gray-500">
+               <div className="flex justify-between items-center text-xs md:text-sm font-medium text-gray-500">
                   <span>Service Charge (Included)</span>
                   <span>₹0.00</span>
                </div>
-               <div className="flex justify-between items-center pt-4">
+               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 gap-4">
                   <div>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Payment Method:</p>
-                    <span className={`text-[11px] font-bold px-2 py-1 rounded ${order.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                    <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Payment Method:</p>
+                    <span className={`text-[10px] md:text-[11px] font-bold px-2 py-1 rounded ${order.payment_status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                       {order.payment_status === 'paid' ? `Paid via ${order.payment_method?.toUpperCase() || 'Online/Cash'}` : 'Payment Pending'}
                     </span>
                   </div>
-                  <div className="text-right">
-                     <p className="text-xs font-bold text-gray-400 uppercase mb-1">Grand Total</p>
-                     <p className="text-3xl font-black text-[#8B5E3C]">₹{parseFloat(order.total_price).toFixed(2)}</p>
+                  <div className="text-right w-full sm:w-auto">
+                     <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase mb-1">Grand Total</p>
+                     <p className="text-2xl md:text-3xl font-black text-[#8B5E3C]">₹{parseFloat(order.total_price).toFixed(2)}</p>
                   </div>
                </div>
             </div>

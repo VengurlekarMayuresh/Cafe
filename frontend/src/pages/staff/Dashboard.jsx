@@ -84,19 +84,19 @@ export default function StaffDashboard() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         
         {/* Top Action Bar */}
-        <div className="mb-10 flex items-center justify-between bg-[#412918] p-6 rounded-[2rem] shadow-xl text-white">
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between bg-[#412918] p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-xl text-white gap-6">
            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#8B5E3C] rounded-2xl flex items-center justify-center">
-                 <ShoppingBag className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 md:w-14 md:h-14 bg-[#8B5E3C] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
+                 <ShoppingBag className="w-5 h-5 md:w-7 md:h-7 text-white" />
               </div>
               <div>
-                 <h1 className="text-2xl font-serif font-black tracking-tight">Staff Command Center</h1>
-                 <p className="text-[10px] text-[#D4A373] font-bold uppercase tracking-[0.2em]">Live Kitchen & POS Terminal</p>
+                 <h1 className="text-xl md:text-3xl font-serif font-black tracking-tight leading-tight">Staff Command Center</h1>
+                 <p className="text-[9px] md:text-[10px] text-[#D4A373] font-bold uppercase tracking-[0.2em]">Live Kitchen & POS Terminal</p>
               </div>
            </div>
            <Link 
               to="/staff/pos" 
-              className="bg-[#D4A373] hover:bg-[#c39162] text-[#412918] px-8 py-3.5 rounded-2xl text-sm font-black transition-all flex items-center gap-3 hover:-translate-y-0.5 shadow-lg active:scale-95"
+              className="bg-[#D4A373] hover:bg-[#c39162] text-[#412918] px-6 md:px-10 py-3.5 md:py-4 rounded-xl md:rounded-2xl text-xs md:text-sm font-black transition-all flex items-center justify-center gap-3 hover:-translate-y-0.5 shadow-lg active:scale-95 w-full md:w-auto"
            >
               <Plus className="w-5 h-5" /> New Walk-in Order
            </Link>

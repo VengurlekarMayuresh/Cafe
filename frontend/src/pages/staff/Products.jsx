@@ -130,14 +130,14 @@ export default function StaffProducts() {
     <div className="min-h-screen bg-[#F5F1ED] p-6 lg:p-10 font-sans text-[#333333]">
       <div className="max-w-7xl mx-auto">
         
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 bg-white p-6 rounded-3xl border border-[#EBE3D5] shadow-sm">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-[#412918]">Menu Management</h1>
-            <p className="text-gray-500 text-sm mt-1">Add, edit, or remove items from the cafe menu.</p>
+            <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#412918]">Menu Management</h1>
+            <p className="text-gray-500 text-xs md:text-sm mt-1">Add, edit, or remove items from the cafe menu.</p>
           </div>
           <button 
             onClick={() => { resetForm(); setShowForm(true); }}
-            className="bg-[#412918] hover:bg-[#5a3f2c] text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md active:scale-95"
+            className="bg-[#412918] hover:bg-[#5a3f2c] text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 w-full sm:w-auto"
           >
             <Plus className="w-5 h-5" /> Add Item
           </button>
@@ -151,15 +151,15 @@ export default function StaffProducts() {
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
               className="overflow-hidden"
             >
-              <div className="bg-white rounded-3xl p-8 shadow-xl border border-[#EBE3D5] relative">
+              <div className="bg-white rounded-3xl p-5 md:p-8 shadow-xl border border-[#EBE3D5] relative">
                 <button 
                   onClick={() => setShowForm(false)}
-                  className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                  className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
                 
-                <h2 className="text-2xl font-serif font-bold text-[#412918] mb-6 border-b border-[#EBE3D5] pb-4">
+                <h2 className="text-xl md:text-2xl font-serif font-bold text-[#412918] mb-6 border-b border-[#EBE3D5] pb-4 pr-10">
                   {editingId ? 'Edit Product' : 'Add New Product'}
                 </h2>
                 
@@ -169,24 +169,24 @@ export default function StaffProducts() {
                   <div className="flex flex-col gap-2">
                     <label className="text-sm font-bold text-gray-700">Product Image</label>
                     <div 
-                      className="relative h-64 w-full bg-[#F5F1ED] rounded-2xl border-2 border-dashed border-[#EBE3D5] flex flex-col items-center justify-center overflow-hidden group cursor-pointer hover:border-[#8B5E3C] transition-colors"
+                      className="relative h-48 md:h-64 w-full bg-[#F5F1ED] rounded-2xl border-2 border-dashed border-[#EBE3D5] flex flex-col items-center justify-center overflow-hidden group cursor-pointer hover:border-[#8B5E3C] transition-colors"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {imagePreview ? (
                         <>
                           <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ImageIcon className="w-8 h-8 text-white mb-2" />
-                            <span className="text-white font-medium text-sm">Change Image</span>
+                            <ImageIcon className="w-6 h-6 md:w-8 md:h-8 text-white mb-2" />
+                            <span className="text-white font-medium text-xs md:text-sm">Change Image</span>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform text-[#A67B5B]">
-                            <ImageIcon className="w-8 h-8" />
+                          <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform text-[#A67B5B]">
+                            <ImageIcon className="w-6 h-6 md:w-8 md:h-8" />
                           </div>
-                          <span className="text-[#8B5E3C] font-bold">Upload Image</span>
-                          <span className="text-xs text-gray-500 mt-1">JPG, PNG or WEBP (Max 5MB)</span>
+                          <span className="text-[#8B5E3C] font-bold text-sm">Upload Image</span>
+                          <span className="text-[10px] text-gray-500 mt-1">JPG, PNG or WEBP (Max 5MB)</span>
                         </>
                       )}
                       <input 
@@ -266,8 +266,8 @@ export default function StaffProducts() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
-                      <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 gap-4">
+                      <label className="flex items-center gap-3 cursor-pointer group order-2 sm:order-1">
                         <div className="relative">
                           <input 
                             type="checkbox" 
@@ -278,13 +278,13 @@ export default function StaffProducts() {
                           <div className={`w-11 h-6 rounded-full transition-colors ${form.is_available ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                           <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${form.is_available ? 'translate-x-5' : 'translate-x-0'}`}></div>
                         </div>
-                        <span className="font-bold text-gray-700 select-none">Currently Available</span>
+                        <span className="font-bold text-gray-700 select-none text-sm">Currently Available</span>
                       </label>
 
                       <button 
                         type="submit" 
                         disabled={submitting}
-                        className="bg-[#8B5E3C] hover:bg-[#6c482e] text-white px-8 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-colors disabled:opacity-70 shadow-md"
+                        className="bg-[#8B5E3C] hover:bg-[#6c482e] text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-70 shadow-md order-1 sm:order-2 w-full sm:w-auto"
                       >
                         {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                         {editingId ? 'Save Changes' : 'Publish Product'}
