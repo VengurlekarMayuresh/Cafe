@@ -95,28 +95,10 @@ export const AuthProvider = ({ children }) => {
   const googleLogin = async () => {
     try {
       const { signInWithGoogle } = await import('../utils/firebase');
-      const firebaseUser = await signInWithGoogle();
-      const idToken = await firebaseUser.getIdToken();
-      
-      const res = await api.post('/auth/google-login', { 
-        idToken,
-        email: firebaseUser.email,
-        name: firebaseUser.displayName,
-        googleId: firebaseUser.uid 
-      });
-      
-      const { user: userData, token: userToken } = res.data.data || res.data;
-      localStorage.setItem('token', userToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setToken(userToken);
-      setUser(userData);
-      return res.data.data || res.data;
+      await signInWithGoogle();
+      // Execution stops here due to page redirect
     } catch (error) {
-      console.error("Firebase Google Login Detailed Error:", {
-        message: error.message,
-        code: error.code,
-        response: error.response?.data
-      });
+      console.error("Firebase Google Login Error:", error);
       throw error;
     }
   };
