@@ -18,12 +18,25 @@ const app = express();
 // Security & Logging
 app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+const allowedOrigins = [
+  process.env.FRONTEND_URL, 
+  'https://cafe-gqhq.vercel.app', // Added explicitly to resolve user error
+  'http://localhost:5173', 
+  'http://localhost:3000'
+].filter(Boolean);
+
+console.log('CORS Allowed Origins:', allowedOrigins);
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL, 
-    'http://localhost:5173', 
-    'http://localhost:3000'
-  ].filter(Boolean),
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin: ' + origin;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 
@@ -83,11 +96,7 @@ const startServer = async () => {
     // Initialize Socket.io for real-time notifications
     const io = require('socket.io')(server, {
       cors: {
-        origin: [
-          process.env.FRONTEND_URL, 
-          'http://localhost:5173', 
-          'http://localhost:3000'
-        ].filter(Boolean),
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
         credentials: true
       },
