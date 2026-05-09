@@ -1,10 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './utils/ProtectedRoute';
 import './index.css'
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Unauthorized from './pages/Unauthorized';
 import CustomerHome from './pages/customer/Home';
 import CustomerMenu from './pages/customer/Menu';
@@ -27,14 +26,13 @@ function App() {
           <Navbar />
           <main className="flex-grow">
             <Routes>
-              {/* Routes here */}
+              {/* Public Routes */}
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/" element={<CustomerHome />} />
+              <Route path="/menu" element={<CustomerMenu />} />
 
-              {/* Customer Routes */}
-              <Route path="/" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><CustomerHome /></ProtectedRoute>} />
-              <Route path="/menu" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><CustomerMenu /></ProtectedRoute>} />
+              {/* Protected Customer Routes */}
               <Route path="/orders" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><CustomerOrders /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><Cart /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer', 'staff', 'admin']}><Profile /></ProtectedRoute>} />
@@ -48,6 +46,9 @@ function App() {
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminUsers /></ProtectedRoute>} />
               <Route path="/admin/customers" element={<ProtectedRoute allowedRoles={['admin']}><AdminCustomers /></ProtectedRoute>} />
+
+              {/* Catch-all Route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
           <Footer />

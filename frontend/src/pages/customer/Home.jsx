@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronLeft, ChevronRight, Tag, ArrowRight, ShoppingCart, Info, BellRing, Coffee, Carrot, Cookie } from 'lucide-react';
 import ProductModal from '../../components/ProductModal';
@@ -7,6 +8,7 @@ import api from '../../utils/api';
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -71,7 +73,13 @@ export default function Home() {
     fetchProducts();
   }, []);
 
+  const { user } = useAuth();
+  
   const addToCart = (product, qty = 1) => {
+    if (!user) {
+      navigate('/login', { state: { from: location, message: 'Please login to add items to your cart.' } });
+      return;
+    }
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
@@ -96,29 +104,29 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
         
         {/* Hero Carousel Area */}
-        <section className="relative w-full h-[400px] rounded-3xl overflow-hidden shadow-xl group">
+        <section className="relative w-full h-[300px] md:h-[450px] lg:h-[500px] rounded-2xl md:rounded-3xl overflow-hidden shadow-xl group">
           {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out hover:scale-105"
             style={{ backgroundImage: `url('${carouselSlides[currentSlide].image}')` }}
           />
           {/* Gradient Overlay for Text Readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#3a2211]/90 via-[#4e2e17]/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3a2211]/90 via-[#4e2e17]/70 to-transparent md:via-[#4e2e17]/60" />
 
           {/* Hero Content */}
-          <div className="absolute inset-0 flex flex-col justify-center p-12 md:p-20 text-white w-full md:w-2/3">
+          <div className="absolute inset-0 flex flex-col justify-center p-6 sm:p-10 md:p-16 lg:p-20 text-white w-full md:w-3/4 lg:w-2/3">
             <motion.h1 
               key={`title-${currentSlide}`}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-              className="text-5xl md:text-6xl font-serif font-bold mb-4 leading-tight drop-shadow-md"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-3 md:mb-4 leading-tight drop-shadow-md"
             >
-              {carouselSlides[currentSlide].title} <br/>
+              {carouselSlides[currentSlide].title} <br className="hidden sm:block"/>
               <span className="text-[#D4A373]">{carouselSlides[currentSlide].highlight}</span>
             </motion.h1>
             <motion.p 
               key={`desc-${currentSlide}`}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg md:text-xl text-[#F5F1ED] mb-8 font-medium max-w-lg leading-relaxed drop-shadow-sm"
+              className="text-sm sm:text-base md:text-lg lg:text-xl text-[#F5F1ED] mb-6 md:mb-8 font-medium max-w-md lg:max-w-lg leading-relaxed drop-shadow-sm line-clamp-2 sm:line-clamp-none"
             >
               {carouselSlides[currentSlide].desc}
             </motion.p>
@@ -126,33 +134,33 @@ export default function Home() {
               key={`btn-${currentSlide}`}
               onClick={scrollToPopular}
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
-              className="bg-[#A67B5B] hover:bg-[#D4A373] text-white px-8 py-3.5 rounded-full font-bold w-max flex items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+              className="bg-[#A67B5B] hover:bg-[#D4A373] text-white px-6 md:px-8 py-2.5 md:py-3.5 rounded-full font-bold w-max flex items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm md:text-base"
             >
-              ORDER NOW <ArrowRight className="w-5 h-5" />
+              ORDER NOW <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
             </motion.button>
           </div>
 
-          {/* Carousel Controls */}
+          {/* Carousel Controls - Hidden on mobile for cleaner look */}
           <button 
             onClick={() => setCurrentSlide((prev) => (prev === 0 ? carouselSlides.length - 1 : prev - 1))}
-            className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+            className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
           </button>
           <button 
             onClick={() => setCurrentSlide((prev) => (prev + 1) % carouselSlides.length)}
-            className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+            className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/80 hover:bg-white text-[#6F4E37] rounded-full flex items-center justify-center opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
           {/* Carousel Dots */}
-          <div className="absolute bottom-6 left-1/2 -translate-y-1/2 -translate-x-1/2 flex gap-2 z-10">
+          <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2 z-10">
             {carouselSlides.map((_, idx) => (
               <div 
                 key={idx}
                 onClick={() => setCurrentSlide(idx)}
-                className={`w-2.5 h-2.5 rounded-full cursor-pointer shadow-sm transition-all ${currentSlide === idx ? 'bg-[#D4A373] w-6' : 'bg-white/50 hover:bg-white/80'}`}
+                className={`h-1.5 md:h-2.5 rounded-full cursor-pointer shadow-sm transition-all ${currentSlide === idx ? 'bg-[#D4A373] w-4 md:w-6' : 'bg-white/50 hover:bg-white/80 w-1.5 md:w-2.5'}`}
               ></div>
             ))}
           </div>
