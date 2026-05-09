@@ -16,13 +16,14 @@ export const AuthProvider = ({ children }) => {
       if (!token) { setLoading(false); return; }
       try {
         const res = await api.get('/auth/me');
-        setUser(res.data);
-        localStorage.setItem('user', JSON.stringify(res.data));
-      } catch {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setToken(null);
-        setUser(null);
+        const userData = res.data.data || res.data;
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      } catch (err) {
+        // If 401 or 403, clear session
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          logout();
+        }
       } finally {
         setLoading(false);
       }
@@ -30,18 +31,33 @@ export const AuthProvider = ({ children }) => {
     verifyToken();
   }, [token]);
 
-  const login = async (phone, password) => {
-    const res = await api.post('/auth/login', { phone, password });
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('user', JSON.stringify(res.data.user));
-    setToken(res.data.token);
-    setUser(res.data.user);
-    return res.data;
-  };
-
-  const register = async (data) => {
-    const res = await api.post('/auth/register', data);
-    return res.data;
+  const googleLogin = async () => {
+    try {
+      const { signInWithGoogle } = await import('../utils/firebase');
+      const firebaseUser = await signInWithGoogle();
+      const idToken = await firebaseUser.getIdToken();
+      
+      const res = await api.post('/auth/google-login', { 
+        idToken,
+        email: firebaseUser.email,
+        name: firebaseUser.displayName,
+        googleId: firebaseUser.uid 
+      });
+      
+      const { user: userData, token: userToken } = res.data.data || res.data;
+      localStorage.setItem('token', userToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setToken(userToken);
+      setUser(userData);
+      return res.data.data || res.data;
+    } catch (error) {
+      console.error("Firebase Google Login Detailed Error:", {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data
+      });
+      throw error;
+    }
   };
 
   const logout = () => {
@@ -52,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, setUser, googleLogin, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
