@@ -215,7 +215,7 @@ export default function Menu() {
                       }`}
                     >
                       {product.is_available !== false ? (
-                        <>ADD TO BAG <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" /></>
+                        <>ADD TO CART <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" /></>
                       ) : (
                         'UNAVAILABLE'
                       )}
