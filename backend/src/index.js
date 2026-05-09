@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const morgan = require('morgan');
 const { sequelize } = require('./models');
 
 const authRoutes = require('./routes/auth');
@@ -14,10 +15,15 @@ const reviewRoutes = require('./routes/reviews');
 
 const app = express();
 
-// Security middleware
+// Security & Logging
 app.use(helmet());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL, 
+    'http://localhost:5173', 
+    'http://localhost:3000'
+  ].filter(Boolean),
   credentials: true,
 }));
 
@@ -77,8 +83,13 @@ const startServer = async () => {
     // Initialize Socket.io for real-time notifications
     const io = require('socket.io')(server, {
       cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: [
+          process.env.FRONTEND_URL, 
+          'http://localhost:5173', 
+          'http://localhost:3000'
+        ].filter(Boolean),
         methods: ['GET', 'POST'],
+        credentials: true
       },
     });
 
