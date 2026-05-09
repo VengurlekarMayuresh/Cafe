@@ -14,11 +14,13 @@ export const AuthProvider = ({ children }) => {
   // 1. Handle Redirect Result on Mount
   useEffect(() => {
     const processRedirect = async () => {
+      console.log("Checking for Google Auth redirect result...");
       try {
         const { handleRedirectResult } = await import('../utils/firebase');
         const firebaseUser = await handleRedirectResult();
         
         if (firebaseUser) {
+          console.log("Google Auth Success! Processing user:", firebaseUser.email);
           const idToken = await firebaseUser.getIdToken();
           const res = await api.post('/auth/google-login', { 
             idToken,
@@ -28,18 +30,23 @@ export const AuthProvider = ({ children }) => {
           });
           
           const { user: userData, token: userToken } = res.data.data || res.data;
+          console.log("Backend Login Success:", userData.role);
+          
           localStorage.setItem('token', userToken);
           localStorage.setItem('user', JSON.stringify(userData));
           setToken(userToken);
           setUser(userData);
+          setLoading(false);
+          return;
+        } else {
+          console.log("No redirect result found (Normal).");
         }
       } catch (err) {
         console.error("Critical Auth Redirect Error:", err);
-      } finally {
-        // Only set loading false if we don't have a token to verify
-        if (!localStorage.getItem('token')) {
-          setLoading(false);
-        }
+      }
+      
+      if (!localStorage.getItem('token')) {
+        setLoading(false);
       }
     };
     processRedirect();
@@ -49,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const verifyToken = async () => {
       if (!token) { 
-        setLoading(false); 
+        // Note: loading is already handled by processRedirect for the initial load
         return; 
       }
       try {
@@ -111,8 +118,25 @@ export const AuthProvider = ({ children }) => {
   const googleLogin = async () => {
     try {
       const { signInWithGoogle } = await import('../utils/firebase');
-      await signInWithGoogle();
-      // Execution stops here due to page redirect
+      const firebaseUser = await signInWithGoogle();
+      
+      // If we got a user back (Popup mode)
+      if (firebaseUser) {
+        const idToken = await firebaseUser.getIdToken();
+        const res = await api.post('/auth/google-login', { 
+          idToken,
+          email: firebaseUser.email,
+          name: firebaseUser.displayName,
+          googleId: firebaseUser.uid 
+        });
+        
+        const { user: userData, token: userToken } = res.data.data || res.data;
+        localStorage.setItem('token', userToken);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setToken(userToken);
+        setUser(userData);
+      }
+      // If no user back, it means Redirect mode was triggered, page will reload
     } catch (error) {
       console.error("Firebase Google Login Error:", error);
       throw error;

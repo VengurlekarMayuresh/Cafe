@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,10 +16,18 @@ export const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async () => {
   try {
-    await signInWithRedirect(auth, googleProvider);
+    // Try Popup first (better UX, more reliable on some browsers)
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
   } catch (error) {
-    console.error("Error signing in with Google", error);
-    throw error;
+    // If popup is blocked or closed, try redirect
+    if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+      console.log("Popup blocked or closed, falling back to redirect...");
+      await signInWithRedirect(auth, googleProvider);
+    } else {
+      console.error("Firebase Auth Error:", error.code, error.message);
+      throw error;
+    }
   }
 };
 
@@ -28,7 +36,7 @@ export const handleRedirectResult = async () => {
     const result = await getRedirectResult(auth);
     return result?.user;
   } catch (error) {
-    console.error("Error handling redirect result", error);
+    console.error("Error handling redirect result", error.code, error.message);
     throw error;
   }
 };

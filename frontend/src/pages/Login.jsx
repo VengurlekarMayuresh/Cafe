@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
@@ -9,8 +9,23 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, googleLogin } = useAuth();
+  const { user, login, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (user.isIncomplete) {
+        navigate('/profile');
+      } else if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'staff') {
+        navigate('/staff');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,16 +51,12 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    setError('');
     try {
-      const data = await googleLogin();
-      if (data.isIncomplete) {
-        navigate('/profile', { state: { message: 'Welcome! Please provide your phone and address details.' } });
-      } else {
-        navigate('/');
-      }
+      await googleLogin();
+      // Page will redirect, no need to handle response here
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Google Login failed');
-    } finally {
       setLoading(false);
     }
   };
@@ -137,11 +148,6 @@ export default function Login() {
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="bg-[#FDFBF7] p-6 sm:p-8 text-center border-t border-gray-50">
-            <p className="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-wide">New Member?</p>
-            <p className="text-[#8B5E3C] text-xs sm:text-sm font-black leading-tight">Delivery details requested after login.</p>
           </div>
         </div>
         
